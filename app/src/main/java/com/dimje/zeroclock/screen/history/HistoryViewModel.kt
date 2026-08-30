@@ -2,43 +2,47 @@ package com.dimje.zeroclock.screen.history
 
 import androidx.lifecycle.viewModelScope
 import com.dimje.zeroclock.base.BaseViewModel
+import com.dimje.zeroclock.util.KoreaDate
+import com.dimje.domain.usecase.ObserveWorriesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
+import java.time.YearMonth
 import kotlinx.coroutines.launch
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
+import kotlinx.coroutines.flow.catch
 import javax.inject.Inject
 
 @HiltViewModel
-class HistoryViewModel @Inject constructor() :
-    BaseViewModel<HistoryUiState, HistoryUiEvent, HistoryUiEffect>() {
-
-
+class HistoryViewModel @Inject constructor(
+    private val observeWorries: ObserveWorriesUseCase,
+) : BaseViewModel<HistoryUiState, HistoryUiIntent, HistoryUiEffect>(
+    HistoryUiState(
+        visibleMonth = YearMonth.from(KoreaDate.today()),
+        selectedDate = KoreaDate.today(),
+    ),
+) {
     init {
-        onEvent(HistoryUiEvent.LoadHistory)
+        observeHistory()
     }
 
-    override fun createInitialState(): HistoryUiState = HistoryUiState.Loading
-
-    override fun onEvent(event: HistoryUiEvent) {
-        when (event) {
-            HistoryUiEvent.LoadHistory -> loadHistory()
-            is HistoryUiEvent.OnItemClick -> {
-                val json = URLEncoder.encode(Json.encodeToString(event.itemId), StandardCharsets.UTF_8.toString())
-                postEffect(HistoryUiEffect.NavigateToDetail(json))
-            }
+    override fun onIntent(intent: HistoryUiIntent) {
+        when (intent) {
+            HistoryUiIntent.PreviousMonth -> reduce { copy(visibleMonth = visibleMonth.minusMonths(1)) }
+            HistoryUiIntent.NextMonth -> reduce { copy(visibleMonth = visibleMonth.plusMonths(1)) }
+            is HistoryUiIntent.SelectDate -> reduce { copy(selectedDate = intent.date) }
+            HistoryUiIntent.Retry -> observeHistory()
+            HistoryUiIntent.Back -> postEffect(HistoryUiEffect.NavigateBack)
         }
     }
 
-    private fun loadHistory() {
+    private fun observeHistory() {
         viewModelScope.launch {
-            setState(HistoryUiState.Loading)
-            delay(300)
-            val history = listOf("이용 기록 A", "이용 기록 B", "이용 기록 C")
-            setState(HistoryUiState.Success(history))
-            postEffect(HistoryUiEffect.ShowToast("이용 기록을 불러왔어요"))
+            reduce { copy(isLoading = true, errorMessage = null) }
+            observeWorries()
+                .catch { error ->
+                    reduce { copy(isLoading = false, errorMessage = error.message ?: "기록을 불러오지 못했어요.") }
+                }
+                .collect { entries ->
+                    reduce { copy(isLoading = false, entries = entries, errorMessage = null) }
+                }
         }
     }
 }

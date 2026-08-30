@@ -1,9 +1,15 @@
 package com.dimje.zeroclock.screen.ask
 
 import com.dimje.zeroclock.base.BaseUiState
+import com.dimje.domain.model.WorryEntry
 
-sealed class AskUiState : BaseUiState {
-    object Loading : AskUiState()
-    data class Success(val questions: List<String>) : AskUiState()
-    data class Error(val message: String) : AskUiState()
+data class AskUiState(
+    val isLoading: Boolean = true,
+    val worry: String = "",
+    val savedEntry: WorryEntry? = null,
+    val isSubmitting: Boolean = false,
+    val errorMessage: String? = null,
+) : BaseUiState {
+    val canSubmit: Boolean
+        get() = worry.isNotBlank() && !isSubmitting && savedEntry == null
 }

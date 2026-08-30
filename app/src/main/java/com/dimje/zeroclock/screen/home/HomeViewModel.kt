@@ -2,33 +2,52 @@ package com.dimje.zeroclock.screen.home
 
 import androidx.lifecycle.viewModelScope
 import com.dimje.zeroclock.base.BaseViewModel
+import com.dimje.zeroclock.util.KoreaDate
+import com.dimje.domain.usecase.ObserveWorriesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeViewModel @Inject constructor() :
-    BaseViewModel<HomeUiState, HomeUiEvent, HomeUiEffect>() {
+class HomeViewModel @Inject constructor(
+    private val observeWorries: ObserveWorriesUseCase,
+) : BaseViewModel<HomeUiState, HomeUiIntent, HomeUiEffect>(HomeUiState()) {
+    private var observerJob: Job? = null
 
     init {
-        fetch()
+        observeToday()
     }
 
-    override fun createInitialState(): HomeUiState = HomeUiState.Loading
-
-    override fun onEvent(event: HomeUiEvent) {
-        when (event) {
-            HomeUiEvent.OnRefresh -> fetch()
-            HomeUiEvent.OnToastClick -> postEffect(HomeUiEffect.ShowToast("Home에서 호출됨"))
+    override fun onIntent(intent: HomeUiIntent) {
+        when (intent) {
+            HomeUiIntent.ToggleMenu -> reduce { copy(isMenuExpanded = !isMenuExpanded) }
+            is HomeUiIntent.SelectMenu -> {
+                reduce { copy(isMenuExpanded = false) }
+                postEffect(HomeUiEffect.Navigate(intent.route))
+            }
+            HomeUiIntent.Retry -> observeToday()
         }
     }
 
-    private fun fetch() {
-        viewModelScope.launch {
-            setState(HomeUiState.Loading)
-            delay(500) // 임시 로딩 효과
-            setState(HomeUiState.Success("홍길동", listOf("알림1", "알림2")))
+    private fun observeToday() {
+        observerJob?.cancel()
+        observerJob = viewModelScope.launch {
+            reduce { copy(isLoading = true, errorMessage = null) }
+            observeWorries()
+                .catch { error ->
+                    reduce { copy(isLoading = false, errorMessage = error.message ?: "기록을 불러오지 못했어요.") }
+                }
+                .collect { entries ->
+                    reduce {
+                        copy(
+                            isLoading = false,
+                            todayEntry = entries.firstOrNull { it.date == KoreaDate.today() },
+                            errorMessage = null,
+                        )
+                    }
+                }
         }
     }
 }

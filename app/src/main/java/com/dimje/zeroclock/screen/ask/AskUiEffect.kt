@@ -2,6 +2,7 @@ package com.dimje.zeroclock.screen.ask
 
 import com.dimje.zeroclock.base.BaseUiEffect
 
-sealed class AskUiEffect : BaseUiEffect {
-    data class ShowToast(val message: String) : AskUiEffect()
+sealed interface AskUiEffect : BaseUiEffect {
+    data class ShowMessage(val message: String) : AskUiEffect
+    data object NavigateBack : AskUiEffect
 }

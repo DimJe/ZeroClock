@@ -1,9 +1,11 @@
 package com.dimje.zeroclock.screen.home
 
 import com.dimje.zeroclock.base.BaseUiState
+import com.dimje.domain.model.WorryEntry
 
-sealed class HomeUiState : BaseUiState {
-    object Loading : HomeUiState()
-    data class Success(val userName: String, val notifications: List<String>) : HomeUiState()
-    data class Error(val message: String) : HomeUiState()
-}
+data class HomeUiState(
+    val isLoading: Boolean = true,
+    val todayEntry: WorryEntry? = null,
+    val isMenuExpanded: Boolean = false,
+    val errorMessage: String? = null,
+) : BaseUiState
