@@ -7,6 +7,7 @@ sealed interface HistoryUiIntent : BaseUiIntent {
     data object PreviousMonth : HistoryUiIntent
     data object NextMonth : HistoryUiIntent
     data class SelectDate(val date: LocalDate) : HistoryUiIntent
+    data class OpenDetail(val date: LocalDate) : HistoryUiIntent
     data object Retry : HistoryUiIntent
     data object Back : HistoryUiIntent
 }

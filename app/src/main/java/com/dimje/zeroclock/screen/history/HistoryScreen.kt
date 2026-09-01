@@ -53,6 +53,7 @@ import java.util.Locale
 @Composable
 fun HistoryRoute(
     onBack: () -> Unit,
+    onNavigateToDetail: (LocalDate) -> Unit,
     viewModel: HistoryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -61,6 +62,7 @@ fun HistoryRoute(
         viewModel.effect.collect { effect ->
             when (effect) {
                 HistoryUiEffect.NavigateBack -> onBack()
+                is HistoryUiEffect.NavigateToDetail -> onNavigateToDetail(effect.date)
             }
         }
     }
@@ -112,7 +114,11 @@ fun HistoryScreen(
             ) {
                 CalendarCard(state = state, onIntent = onIntent)
                 Spacer(Modifier.height(20.dp))
-                EntryDetail(entry = state.selectedEntry, selectedDate = state.selectedDate)
+                EntryDetail(
+                    entry = state.selectedEntry,
+                    selectedDate = state.selectedDate,
+                    onClick = { entry -> onIntent(HistoryUiIntent.OpenDetail(entry.date)) },
+                )
             }
         }
     }
@@ -206,10 +212,16 @@ private fun CalendarDay(
 }
 
 @Composable
-private fun EntryDetail(entry: WorryEntry?, selectedDate: LocalDate?) {
+private fun EntryDetail(
+    entry: WorryEntry?,
+    selectedDate: LocalDate?,
+    onClick: (WorryEntry) -> Unit,
+) {
     val dateFormatter = remember { DateTimeFormatter.ofPattern("M월 d일 EEEE", Locale.KOREAN) }
     Surface(
         modifier = Modifier.fillMaxWidth(),
+        onClick = { entry?.let(onClick) },
+        enabled = entry != null,
         shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 2.dp,
@@ -232,6 +244,12 @@ private fun EntryDetail(entry: WorryEntry?, selectedDate: LocalDate?) {
                 Spacer(Modifier.height(18.dp))
                 Text("받은 답장", color = MaterialTheme.colorScheme.primary)
                 Text(entry.response, modifier = Modifier.padding(top = 6.dp))
+                Text(
+                    text = "자세히 보기",
+                    modifier = Modifier.align(Alignment.End).padding(top = 16.dp),
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold,
+                )
             }
         }
     }

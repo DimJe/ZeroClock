@@ -28,6 +28,7 @@ class HistoryViewModel @Inject constructor(
             HistoryUiIntent.PreviousMonth -> reduce { copy(visibleMonth = visibleMonth.minusMonths(1)) }
             HistoryUiIntent.NextMonth -> reduce { copy(visibleMonth = visibleMonth.plusMonths(1)) }
             is HistoryUiIntent.SelectDate -> reduce { copy(selectedDate = intent.date) }
+            is HistoryUiIntent.OpenDetail -> postEffect(HistoryUiEffect.NavigateToDetail(intent.date))
             HistoryUiIntent.Retry -> observeHistory()
             HistoryUiIntent.Back -> postEffect(HistoryUiEffect.NavigateBack)
         }
