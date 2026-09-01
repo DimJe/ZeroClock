@@ -1,5 +1,6 @@
 package com.dimje.zeroclock.screen.analysis
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,7 +21,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -32,6 +33,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -110,10 +112,7 @@ fun AnalysisScreen(
                     modifier = Modifier.padding(top = 12.dp, bottom = 24.dp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                LinearProgressIndicator(
-                    progress = { state.recordedDayCount / 15f },
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                AnalysisProgressBar(progress = state.recordedDayCount / 15f)
                 Text(
                     "${state.recordedDayCount}/15 · ${state.remainingDayCount}일의 기록이 더 필요해요",
                     modifier = Modifier.padding(top = 10.dp),
@@ -159,6 +158,29 @@ fun AnalysisScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun AnalysisProgressBar(
+    progress: Float,
+    modifier: Modifier = Modifier,
+) {
+    val shape = RoundedCornerShape(50)
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(6.dp)
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceVariant),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(progress.coerceIn(0f, 1f))
+                .height(6.dp)
+                .clip(shape)
+                .background(MaterialTheme.colorScheme.primary),
+        )
     }
 }
 
