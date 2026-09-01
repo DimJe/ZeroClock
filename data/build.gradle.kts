@@ -14,6 +14,11 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
+        buildConfigField(
+            "String",
+            "SUPABASE_BASE_URL",
+            "\"https://dkrjdqbqfcfltmhafrjv.supabase.co/\""
+        )
     }
 
     buildTypes {
@@ -31,6 +36,9 @@ android {
     }
     kotlinOptions {
         jvmTarget = "11"
+    }
+    buildFeatures {
+        buildConfig = true
     }
 }
 
@@ -56,4 +64,10 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     kapt(libs.androidx.room.compiler)
     androidTestImplementation(libs.androidx.room.testing)
+    implementation(libs.json)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp.core)
+    testImplementation(libs.okhttp.mockwebserver)
 }

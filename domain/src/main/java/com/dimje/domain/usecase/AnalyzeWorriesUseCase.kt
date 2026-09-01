@@ -1,12 +1,19 @@
 package com.dimje.domain.usecase
 
+import com.dimje.domain.logging.DataFlowLogger
 import com.dimje.domain.model.WorryAnalysis
 import com.dimje.domain.model.WorryEntry
 
-class AnalyzeWorriesUseCase {
+class AnalyzeWorriesUseCase(
+    private val flowLogger: DataFlowLogger = DataFlowLogger.NONE,
+) {
     operator fun invoke(entries: List<WorryEntry>): WorryAnalysis? {
         val uniqueEntries = entries.distinctBy { it.date }
-        if (uniqueEntries.size < MINIMUM_ENTRY_COUNT) return null
+        flowLogger.log("DOMAIN", "고민 분석 요청 수신", "uniqueEntryCount=${uniqueEntries.size}")
+        if (uniqueEntries.size < MINIMUM_ENTRY_COUNT) {
+            flowLogger.log("DOMAIN", "고민 분석 결과 전달", "available=false")
+            return null
+        }
 
         val texts = uniqueEntries.map { it.worry }
         val concern = concernRules
@@ -31,7 +38,13 @@ class AnalyzeWorriesUseCase {
             mainConcern = concern.title,
             keywords = keywords,
             suggestion = concern.suggestion,
-        )
+        ).also { analysis ->
+            flowLogger.log(
+                "DOMAIN",
+                "고민 분석 결과 전달",
+                "available=true, entryCount=${analysis.entryCount}, keywordCount=${analysis.keywords.size}",
+            )
+        }
     }
 
     private data class ConcernRule(
