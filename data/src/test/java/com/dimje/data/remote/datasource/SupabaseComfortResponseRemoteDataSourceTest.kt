@@ -1,5 +1,6 @@
-package com.dimje.data.remote
+package com.dimje.data.remote.datasource
 
+import com.dimje.data.remote.SupabaseWorryResponseService
 import com.dimje.domain.logging.DataFlowLogger
 import com.dimje.domain.model.ComfortResponseResult
 import com.dimje.domain.model.WorryRiskLevel
@@ -17,9 +18,9 @@ import org.junit.Test
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-class SupabaseWorryResponseApiTest {
+class SupabaseComfortResponseRemoteDataSourceTest {
     private lateinit var server: MockWebServer
-    private lateinit var api: SupabaseWorryResponseApi
+    private lateinit var remoteDataSource: SupabaseComfortResponseRemoteDataSource
     private lateinit var flowLogger: RecordingDataFlowLogger
 
     @Before
@@ -31,7 +32,7 @@ class SupabaseWorryResponseApiTest {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(SupabaseWorryResponseService::class.java)
-        api = SupabaseWorryResponseApi(service, flowLogger)
+        remoteDataSource = SupabaseComfortResponseRemoteDataSource(service, flowLogger)
     }
 
     @After
@@ -50,7 +51,7 @@ class SupabaseWorryResponseApiTest {
                 ),
         )
 
-        val response = api.generate("내일 발표가 걱정돼요.")
+        val response = remoteDataSource.generate("내일 발표가 걱정돼요.")
 
         assertTrue(response is ComfortResponseResult.Success)
         response as ComfortResponseResult.Success
@@ -78,7 +79,7 @@ class SupabaseWorryResponseApiTest {
         )
 
         val error = runCatching {
-            runBlocking { api.generate("잠이 오지 않아요.") }
+            runBlocking { remoteDataSource.generate("잠이 오지 않아요.") }
         }.exceptionOrNull()
 
         assertTrue(error is WorryResponseApiException)
@@ -96,7 +97,7 @@ class SupabaseWorryResponseApiTest {
         )
 
         val error = runCatching {
-            runBlocking { api.generate("오늘도 마음이 복잡해요.") }
+            runBlocking { remoteDataSource.generate("오늘도 마음이 복잡해요.") }
         }.exceptionOrNull()
 
         assertTrue(error is WorryResponseApiException)
@@ -113,7 +114,7 @@ class SupabaseWorryResponseApiTest {
                 .setBody("""{"message":"empty"}"""),
         )
 
-        val result = api.generate("걱정이 많아요.")
+        val result = remoteDataSource.generate("걱정이 많아요.")
 
         assertTrue(result is ComfortResponseResult.Unknown)
         assertTrue(flowLogger.events.any { it.contains("unknown_status") })
@@ -130,7 +131,7 @@ class SupabaseWorryResponseApiTest {
                 ),
         )
 
-        val result = api.generate("asdf")
+        val result = remoteDataSource.generate("asdf")
 
         assertTrue(result is ComfortResponseResult.Invalid)
         assertEquals("고민을 조금 더 구체적으로 작성해 주세요.", (result as ComfortResponseResult.Invalid).message)
@@ -147,7 +148,7 @@ class SupabaseWorryResponseApiTest {
                 ),
         )
 
-        val result = api.generate("알 수 없는 입력")
+        val result = remoteDataSource.generate("알 수 없는 입력")
 
         assertTrue(result is ComfortResponseResult.Unknown)
         assertEquals("지금은 내용을 판단하지 못했어요.", (result as ComfortResponseResult.Unknown).message)

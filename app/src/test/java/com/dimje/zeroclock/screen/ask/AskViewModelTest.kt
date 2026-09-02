@@ -4,7 +4,7 @@ import com.dimje.domain.logging.DataFlowLogger
 import com.dimje.domain.model.ComfortResponseResult
 import com.dimje.domain.usecase.GetWorryByDateUseCase
 import com.dimje.domain.usecase.SubmitWorryUseCase
-import com.dimje.zeroclock.testing.FakeComfortResponseGenerator
+import com.dimje.zeroclock.testing.FakeComfortResponseRepository
 import com.dimje.zeroclock.testing.FakeDateProvider
 import com.dimje.zeroclock.testing.FakeWorryRepository
 import com.dimje.zeroclock.testing.MainDispatcherRule
@@ -32,7 +32,7 @@ class AskViewModelTest {
         val repository = FakeWorryRepository(listOf(worryEntry(1, date)))
         val viewModel = AskViewModel(
             getWorryByDate = GetWorryByDateUseCase(repository),
-            submitWorry = SubmitWorryUseCase(repository, FakeComfortResponseGenerator()),
+            submitWorry = SubmitWorryUseCase(repository, FakeComfortResponseRepository()),
             flowLogger = DataFlowLogger.NONE,
             dateProvider = dateProvider,
         )
@@ -51,7 +51,7 @@ class AskViewModelTest {
         val repository = FakeWorryRepository(listOf(worryEntry(1, firstDate)))
         val viewModel = AskViewModel(
             getWorryByDate = GetWorryByDateUseCase(repository),
-            submitWorry = SubmitWorryUseCase(repository, FakeComfortResponseGenerator()),
+            submitWorry = SubmitWorryUseCase(repository, FakeComfortResponseRepository()),
             flowLogger = DataFlowLogger.NONE,
             dateProvider = dateProvider,
         )
@@ -74,7 +74,7 @@ class AskViewModelTest {
             getWorryByDate = GetWorryByDateUseCase(repository),
             submitWorry = SubmitWorryUseCase(
                 repository,
-                FakeComfortResponseGenerator(
+                FakeComfortResponseRepository(
                     result = ComfortResponseResult.Invalid("고민 내용을 조금 더 구체적으로 적어 주세요."),
                 ),
             ),

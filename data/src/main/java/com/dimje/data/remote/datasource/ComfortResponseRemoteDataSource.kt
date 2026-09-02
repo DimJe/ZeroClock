@@ -1,7 +1,7 @@
-package com.dimje.domain.repository
+package com.dimje.data.remote.datasource
 
 import com.dimje.domain.model.ComfortResponseResult
 
-interface ComfortResponseGenerator {
+interface ComfortResponseRemoteDataSource {
     suspend fun generate(worry: String): ComfortResponseResult
 }

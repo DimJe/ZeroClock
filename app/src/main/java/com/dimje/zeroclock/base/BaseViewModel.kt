@@ -11,10 +11,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
-interface BaseUiState
-interface BaseUiIntent
-interface BaseUiEffect
-
 abstract class BaseViewModel<STATE : BaseUiState, INTENT : BaseUiIntent, EFFECT : BaseUiEffect>(
     initialState: STATE,
 ) : ViewModel() {

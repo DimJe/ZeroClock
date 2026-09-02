@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteConstraintException
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.dimje.data.local.datasource.RoomWorryLocalDataSource
 import com.dimje.data.local.ZeroClockDatabase
 import com.dimje.domain.model.WorryRiskLevel
 import java.time.LocalDate
@@ -19,9 +20,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class RoomWorryRepositoryTest {
+class WorryRepositoryImplTest {
     private lateinit var database: ZeroClockDatabase
-    private lateinit var repository: RoomWorryRepository
+    private lateinit var repository: WorryRepositoryImpl
 
     @Before
     fun 데이터베이스를_준비한다() {
@@ -30,7 +31,7 @@ class RoomWorryRepositoryTest {
             context,
             ZeroClockDatabase::class.java,
         ).allowMainThreadQueries().build()
-        repository = RoomWorryRepository(database.worryDao())
+        repository = WorryRepositoryImpl(RoomWorryLocalDataSource(database.worryDao()))
     }
 
     @After

@@ -4,39 +4,13 @@ import com.dimje.domain.logging.DataFlowLogger
 import com.dimje.domain.model.ComfortResponseResult
 import com.dimje.domain.model.RejectionReason
 import com.dimje.domain.model.SubmitWorryResult
-import com.dimje.domain.model.WorryEntry
-import com.dimje.domain.repository.ComfortResponseGenerator
+import com.dimje.domain.repository.ComfortResponseRepository
 import com.dimje.domain.repository.WorryRepository
 import java.time.LocalDate
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.onEach
-
-class AlreadySubmittedTodayException : IllegalStateException("오늘의 고민은 이미 기록했습니다.")
-
-class ObserveWorriesUseCase(
-    private val repository: WorryRepository,
-    private val flowLogger: DataFlowLogger = DataFlowLogger.NONE,
-) {
-    operator fun invoke(): Flow<List<WorryEntry>> = repository.observeAll().onEach { entries ->
-        flowLogger.log(DOMAIN_MODULE, "고민 목록 전달", "entryCount=${entries.size}")
-    }
-}
-
-class GetWorryByDateUseCase(
-    private val repository: WorryRepository,
-    private val flowLogger: DataFlowLogger = DataFlowLogger.NONE,
-) {
-    suspend operator fun invoke(date: LocalDate): WorryEntry? {
-        flowLogger.log(DOMAIN_MODULE, "날짜별 고민 요청", "date=$date")
-        return repository.getByDate(date).also { entry ->
-            flowLogger.log(DOMAIN_MODULE, "날짜별 고민 수신", "date=$date, found=${entry != null}")
-        }
-    }
-}
 
 class SubmitWorryUseCase(
     private val repository: WorryRepository,
-    private val responseGenerator: ComfortResponseGenerator,
+    private val responseRepository: ComfortResponseRepository,
     private val flowLogger: DataFlowLogger = DataFlowLogger.NONE,
 ) {
     suspend operator fun invoke(worry: String, date: LocalDate): SubmitWorryResult {
@@ -48,7 +22,7 @@ class SubmitWorryUseCase(
             throw AlreadySubmittedTodayException()
         }
 
-        return when (val result = responseGenerator.generate(trimmedWorry)) {
+        return when (val result = responseRepository.generate(trimmedWorry)) {
             is ComfortResponseResult.Success -> {
                 flowLogger.log(
                     DOMAIN_MODULE,
@@ -82,6 +56,8 @@ class SubmitWorryUseCase(
             }
         }
     }
-}
 
-private const val DOMAIN_MODULE = "DOMAIN"
+    private companion object {
+        const val DOMAIN_MODULE = "DOMAIN"
+    }
+}

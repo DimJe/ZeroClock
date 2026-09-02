@@ -1,23 +1,22 @@
-package com.dimje.data.remote
+package com.dimje.data.remote.datasource
 
+import com.dimje.data.remote.SupabaseWorryResponseService
+import com.dimje.data.remote.model.WorryResponseDto
+import com.dimje.data.remote.model.WorryResponseRequest
 import com.dimje.domain.logging.DataFlowLogger
 import com.dimje.domain.model.ComfortResponseResult
 import com.dimje.domain.model.WorryRiskLevel
+import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import retrofit2.HttpException
 
-class WorryResponseApiException(
-    message: String,
-    cause: Throwable? = null,
-) : IllegalStateException(message, cause)
-
-class SupabaseWorryResponseApi(
+class SupabaseComfortResponseRemoteDataSource @Inject constructor(
     private val service: SupabaseWorryResponseService,
     private val flowLogger: DataFlowLogger,
-) {
-    suspend fun generate(worry: String): ComfortResponseResult {
+) : ComfortResponseRemoteDataSource {
+    override suspend fun generate(worry: String): ComfortResponseResult {
         flowLogger.log(DATA_MODULE, "Supabase 요청 전송", "worryLength=${worry.length}")
-        val apiResponse = try {
+        val response = try {
             service.generate(WorryResponseRequest(worry))
         } catch (error: CancellationException) {
             throw error
@@ -35,7 +34,7 @@ class SupabaseWorryResponseApi(
             )
         }
 
-        return apiResponse.toDomain().also { result ->
+        return response.toDomain().also { result ->
             val details = when (result) {
                 is ComfortResponseResult.Success ->
                     "status=SUCCESS, riskLevel=${result.riskLevel}, responseLength=${result.response.length}"
