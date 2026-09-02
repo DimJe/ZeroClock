@@ -8,4 +8,5 @@ data class WorryEntry(
     val response: String,
     val date: LocalDate,
     val createdAt: Long,
+    val riskLevel: WorryRiskLevel? = null,
 )

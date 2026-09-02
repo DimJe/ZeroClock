@@ -14,4 +14,5 @@ data class WorryEntity(
     val response: String,
     val localDate: String,
     val createdAt: Long,
+    val riskLevel: String?,
 )

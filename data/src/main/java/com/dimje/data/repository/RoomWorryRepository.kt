@@ -4,6 +4,7 @@ import com.dimje.data.local.WorryDao
 import com.dimje.data.local.WorryEntity
 import com.dimje.domain.logging.DataFlowLogger
 import com.dimje.domain.model.WorryEntry
+import com.dimje.domain.model.WorryRiskLevel
 import com.dimje.domain.repository.WorryRepository
 import java.time.LocalDate
 import javax.inject.Inject
@@ -31,6 +32,7 @@ class RoomWorryRepository @Inject constructor(
         worry: String,
         response: String,
         date: LocalDate,
+        riskLevel: WorryRiskLevel,
     ): WorryEntry {
         flowLogger.log(
             DATA_MODULE,
@@ -42,6 +44,7 @@ class RoomWorryRepository @Inject constructor(
             response = response,
             localDate = date.toString(),
             createdAt = System.currentTimeMillis(),
+            riskLevel = riskLevel.name,
         )
         return entity.copy(id = dao.insert(entity)).toDomain().also { entry ->
             flowLogger.log(DATA_MODULE, "Room 저장 완료", "entryId=${entry.id}, date=${entry.date}")
@@ -54,6 +57,9 @@ class RoomWorryRepository @Inject constructor(
         response = response,
         date = LocalDate.parse(localDate),
         createdAt = createdAt,
+        riskLevel = riskLevel?.let { value ->
+            runCatching { WorryRiskLevel.valueOf(value) }.getOrNull()
+        },
     )
 
     private companion object {

@@ -77,7 +77,9 @@ object DataProviderModule {
             context,
             ZeroClockDatabase::class.java,
             "zero-clock.db",
-        ).build()
+        )
+            .addMigrations(ZeroClockDatabase.MIGRATION_1_2)
+            .build()
 
     @Provides
     fun provideWorryDao(database: ZeroClockDatabase): WorryDao = database.worryDao()
