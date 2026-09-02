@@ -1,4 +1,4 @@
-package com.example.zeroclock
+package com.dimje.zeroclock
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -8,17 +8,12 @@ import org.junit.runner.RunWith
 
 import org.junit.Assert.*
 
-/**
- * Instrumented test, which will execute on an Android device.
- *
- * See [testing documentation](http://d.android.com/tools/testing).
- */
+/** 실제 Android 기기에서 애플리케이션 패키지 구성을 검증합니다. */
 @RunWith(AndroidJUnit4::class)
 class ExampleInstrumentedTest {
     @Test
-    fun useAppContext() {
-        // Context of the app under test.
+    fun 앱_컨텍스트의_패키지명이_설정과_일치한다() {
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.example.zeroclock", appContext.packageName)
+        assertEquals("com.dimje.zeroclock", appContext.packageName)
     }
 }
