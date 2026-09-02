@@ -29,6 +29,14 @@ Clean Architecture와 MVI를 유지합니다. 화면별 상태는 불변 `data c
 
 Composable은 State와 Intent 콜백을 받는 stateless 구조로 작성하고 비즈니스 로직을 포함하지 않습니다. 모든 UI 컴포넌트에 더미 데이터를 사용한 `@Preview`를 제공하며, 컬렉션에는 필요에 따라 `ImmutableList`, `@Immutable`, `@Stable`을 적용합니다. 의존성 주입은 Hilt를 사용합니다.
 
+## Compose 화면 구성 규칙
+
+- `*Screen.kt`에는 Route, 화면 상태 분기, 최상위 레이아웃 조립만 둡니다.
+- 독립적인 화면 전용 UI는 `screen/<화면명>/component/`, 둘 이상의 화면에서 사용하는 UI는 `screen/component/`에 둡니다.
+- 주요 Composable은 이름이 같은 파일에 하나씩 작성하고 ViewModel을 직접 참조하지 않으며, 필요한 값과 이벤트 콜백만 전달받습니다.
+- 로딩, 오류, 상단 바처럼 반복되는 상태 UI는 공용 컴포넌트를 우선 사용하고, 각 주요 컴포넌트에 독립적인 `@Preview`를 제공합니다.
+- 단순한 `Text`, `Spacer`처럼 독립적인 의미나 재사용성이 없는 요소까지 과도하게 분리하지 않습니다.
+
 ## 테스트 지침
 
 로컬 로직은 JUnit4, Android 통합 동작은 AndroidX Test와 Espresso, Compose UI는 Compose Test로 검증합니다. 테스트 클래스는 대상 이름에 `Test`를 붙이고(예: `HomeViewModelTest`), 테스트 함수명은 기대 동작이 드러나게 작성합니다. 기능 변경에는 정상 경로와 주요 실패 경로 테스트를 함께 추가합니다.
