@@ -50,6 +50,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.dimje.zeroclock.R
 import com.dimje.zeroclock.screen.Screen
 import com.dimje.zeroclock.ui.theme.ZeroClockTheme
+import com.dimje.zeroclock.util.OnResumeEffect
 
 @Composable
 fun HomeRoute(
@@ -58,8 +59,9 @@ fun HomeRoute(
 ) {
     val state by viewModel.uiState.collectAsState()
 
+    OnResumeEffect { viewModel.onIntent(HomeUiIntent.AppResumed) }
+
     LaunchedEffect(viewModel) {
-        viewModel.onIntent(HomeUiIntent.Retry)
         viewModel.effect.collect { effect ->
             when (effect) {
                 is HomeUiEffect.Navigate -> onNavigate(effect.route)

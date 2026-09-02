@@ -43,6 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dimje.zeroclock.ui.theme.ZeroClockTheme
+import com.dimje.zeroclock.util.OnResumeEffect
 
 @Composable
 fun AskRoute(
@@ -51,6 +52,8 @@ fun AskRoute(
 ) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+
+    OnResumeEffect { viewModel.onIntent(AskUiIntent.AppResumed) }
 
     LaunchedEffect(viewModel) {
         viewModel.effect.collect { effect ->

@@ -3,11 +3,13 @@ package com.dimje.zeroclock.di
 import com.dimje.domain.logging.DataFlowLogger
 import com.dimje.domain.repository.ComfortResponseGenerator
 import com.dimje.domain.repository.WorryRepository
+import com.dimje.domain.time.DateProvider
 import com.dimje.domain.usecase.AnalyzeWorriesUseCase
 import com.dimje.domain.usecase.GetWorryByDateUseCase
 import com.dimje.domain.usecase.ObserveWorriesUseCase
 import com.dimje.domain.usecase.SubmitWorryUseCase
 import com.dimje.zeroclock.util.AndroidDataFlowLogger
+import com.dimje.zeroclock.util.KoreaDateProvider
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -21,6 +23,10 @@ abstract class LoggingModule {
     @Binds
     @Singleton
     abstract fun bindDataFlowLogger(logger: AndroidDataFlowLogger): DataFlowLogger
+
+    @Binds
+    @Singleton
+    abstract fun bindDateProvider(provider: KoreaDateProvider): DateProvider
 }
 
 @Module

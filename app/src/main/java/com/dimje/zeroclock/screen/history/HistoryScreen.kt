@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dimje.domain.model.WorryEntry
 import com.dimje.zeroclock.ui.theme.ZeroClockTheme
+import com.dimje.zeroclock.util.OnResumeEffect
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
@@ -57,6 +58,8 @@ fun HistoryRoute(
     viewModel: HistoryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsState()
+
+    OnResumeEffect { viewModel.onIntent(HistoryUiIntent.AppResumed) }
 
     LaunchedEffect(viewModel) {
         viewModel.effect.collect { effect ->
