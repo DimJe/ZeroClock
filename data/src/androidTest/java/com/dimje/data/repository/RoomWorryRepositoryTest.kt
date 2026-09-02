@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.dimje.data.local.ZeroClockDatabase
+import com.dimje.domain.model.WorryRiskLevel
 import java.time.LocalDate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -45,6 +46,7 @@ class RoomWorryRepositoryTest {
             worry = "내일 발표가 걱정돼요.",
             response = "오늘은 충분히 쉬어도 괜찮아요.",
             date = date,
+            riskLevel = WorryRiskLevel.CONCERN,
         )
         val found = repository.getByDate(date)
 
@@ -53,14 +55,15 @@ class RoomWorryRepositoryTest {
         assertEquals("내일 발표가 걱정돼요.", found?.worry)
         assertEquals("오늘은 충분히 쉬어도 괜찮아요.", found?.response)
         assertEquals(date, found?.date)
+        assertEquals(WorryRiskLevel.CONCERN, found?.riskLevel)
     }
 
     @Test
     fun 전체_기록은_최근_날짜부터_조회된다() = runBlocking {
         val olderDate = LocalDate.of(2026, 8, 30)
         val newerDate = LocalDate.of(2026, 8, 31)
-        repository.save("첫 번째 고민", "첫 번째 답변", olderDate)
-        repository.save("두 번째 고민", "두 번째 답변", newerDate)
+        repository.save("첫 번째 고민", "첫 번째 답변", olderDate, WorryRiskLevel.NORMAL)
+        repository.save("두 번째 고민", "두 번째 답변", newerDate, WorryRiskLevel.CONCERN)
 
         val entries = repository.observeAll().first()
 
@@ -72,10 +75,10 @@ class RoomWorryRepositoryTest {
     @Test
     fun 같은_날짜에는_두_개의_고민을_저장할_수_없다() = runBlocking {
         val date = LocalDate.of(2026, 8, 31)
-        repository.save("첫 번째 고민", "첫 번째 답변", date)
+        repository.save("첫 번째 고민", "첫 번째 답변", date, WorryRiskLevel.NORMAL)
 
         val result = runCatching {
-            repository.save("두 번째 고민", "두 번째 답변", date)
+            repository.save("두 번째 고민", "두 번째 답변", date, WorryRiskLevel.NORMAL)
         }
 
         assertTrue(result.exceptionOrNull() is SQLiteConstraintException)

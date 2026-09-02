@@ -1,6 +1,9 @@
 package com.dimje.domain.usecase
 
 import com.dimje.domain.model.WorryEntry
+import com.dimje.domain.model.ComfortResponseResult
+import com.dimje.domain.model.SubmitWorryResult
+import com.dimje.domain.model.WorryRiskLevel
 import com.dimje.domain.repository.ComfortResponseGenerator
 import com.dimje.domain.repository.WorryRepository
 import java.time.LocalDate
@@ -36,10 +39,33 @@ class SubmitWorryUseCaseTest {
 
         assertEquals(2, repository.entries.value.size)
     }
+
+    @Test
+    fun `유효하지 않은 입력 결과는 저장하지 않아 다시 제출할 수 있다`() = runBlocking {
+        val repository = InMemoryWorryRepository()
+        val rejectedUseCase = SubmitWorryUseCase(repository, InvalidResponseGenerator())
+        val date = LocalDate.of(2026, 9, 2)
+
+        val rejected = rejectedUseCase("asdf", date)
+        val saved = SubmitWorryUseCase(repository, FixedResponseGenerator())("새로운 고민", date)
+
+        assertEquals(SubmitWorryResult.Rejected::class, rejected::class)
+        assertEquals(SubmitWorryResult.Saved::class, saved::class)
+        assertEquals(1, repository.entries.value.size)
+    }
 }
 
 private class FixedResponseGenerator : ComfortResponseGenerator {
-    override suspend fun generate(worry: String): String = "따뜻한 답변"
+    override suspend fun generate(worry: String): ComfortResponseResult = ComfortResponseResult.Success(
+        response = "따뜻한 답변",
+        riskLevel = WorryRiskLevel.NORMAL,
+        isGenerated = true,
+    )
+}
+
+private class InvalidResponseGenerator : ComfortResponseGenerator {
+    override suspend fun generate(worry: String): ComfortResponseResult =
+        ComfortResponseResult.Invalid("입력을 확인해 주세요.")
 }
 
 private class InMemoryWorryRepository : WorryRepository {
@@ -50,13 +76,19 @@ private class InMemoryWorryRepository : WorryRepository {
     override suspend fun getByDate(date: LocalDate): WorryEntry? =
         entries.value.firstOrNull { it.date == date }
 
-    override suspend fun save(worry: String, response: String, date: LocalDate): WorryEntry {
+    override suspend fun save(
+        worry: String,
+        response: String,
+        date: LocalDate,
+        riskLevel: WorryRiskLevel,
+    ): WorryEntry {
         val entry = WorryEntry(
             id = entries.value.size.toLong() + 1L,
             worry = worry,
             response = response,
             date = date,
             createdAt = 0L,
+            riskLevel = riskLevel,
         )
         entries.value += entry
         return entry

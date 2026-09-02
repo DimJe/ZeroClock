@@ -1,6 +1,8 @@
 package com.dimje.zeroclock.testing
 
 import com.dimje.domain.model.WorryEntry
+import com.dimje.domain.model.ComfortResponseResult
+import com.dimje.domain.model.WorryRiskLevel
 import com.dimje.domain.repository.ComfortResponseGenerator
 import com.dimje.domain.repository.WorryRepository
 import com.dimje.domain.time.DateProvider
@@ -30,13 +32,19 @@ class FakeWorryRepository(
     override suspend fun getByDate(date: LocalDate): WorryEntry? =
         entries.value.firstOrNull { it.date == date }
 
-    override suspend fun save(worry: String, response: String, date: LocalDate): WorryEntry {
+    override suspend fun save(
+        worry: String,
+        response: String,
+        date: LocalDate,
+        riskLevel: WorryRiskLevel,
+    ): WorryEntry {
         val entry = WorryEntry(
             id = (entries.value.maxOfOrNull { it.id } ?: 0L) + 1L,
             worry = worry,
             response = response,
             date = date,
             createdAt = 0L,
+            riskLevel = riskLevel,
         )
         entries.value += entry
         return entry
@@ -45,8 +53,14 @@ class FakeWorryRepository(
 
 class FakeComfortResponseGenerator(
     private val response: String = "오늘도 충분히 잘해냈어요.",
+    private val result: ComfortResponseResult? = null,
 ) : ComfortResponseGenerator {
-    override suspend fun generate(worry: String): String = response
+    override suspend fun generate(worry: String): ComfortResponseResult =
+        result ?: ComfortResponseResult.Success(
+            response = response,
+            riskLevel = WorryRiskLevel.NORMAL,
+            isGenerated = true,
+        )
 }
 
 fun worryEntry(id: Long, date: LocalDate): WorryEntry = WorryEntry(

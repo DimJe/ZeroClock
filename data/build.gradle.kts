@@ -40,6 +40,9 @@ android {
     buildFeatures {
         buildConfig = true
     }
+    sourceSets {
+        getByName("androidTest").assets.srcDir("$projectDir/schemas")
+    }
 }
 
 kapt {

@@ -1,6 +1,7 @@
 package com.dimje.zeroclock.screen.ask
 
 import com.dimje.domain.logging.DataFlowLogger
+import com.dimje.domain.model.ComfortResponseResult
 import com.dimje.domain.usecase.GetWorryByDateUseCase
 import com.dimje.domain.usecase.SubmitWorryUseCase
 import com.dimje.zeroclock.testing.FakeComfortResponseGenerator
@@ -15,6 +16,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -62,5 +64,32 @@ class AskViewModelTest {
 
         assertNull(viewModel.uiState.value.savedEntry)
         assertEquals("", viewModel.uiState.value.worry)
+    }
+
+    @Test
+    fun `유효하지 않은 입력은 저장하지 않고 입력과 알림을 유지한다`() = runTest {
+        val date = LocalDate.of(2026, 9, 2)
+        val repository = FakeWorryRepository()
+        val viewModel = AskViewModel(
+            getWorryByDate = GetWorryByDateUseCase(repository),
+            submitWorry = SubmitWorryUseCase(
+                repository,
+                FakeComfortResponseGenerator(
+                    result = ComfortResponseResult.Invalid("고민 내용을 조금 더 구체적으로 적어 주세요."),
+                ),
+            ),
+            flowLogger = DataFlowLogger.NONE,
+            dateProvider = FakeDateProvider(date),
+        )
+        advanceUntilIdle()
+
+        viewModel.onIntent(AskUiIntent.WorryChanged("asdf"))
+        viewModel.onIntent(AskUiIntent.Submit)
+        advanceUntilIdle()
+
+        assertEquals("asdf", viewModel.uiState.value.worry)
+        assertNull(viewModel.uiState.value.savedEntry)
+        assertTrue(viewModel.uiState.value.alert?.message?.contains("구체적으로") == true)
+        assertNull(repository.getByDate(date))
     }
 }
