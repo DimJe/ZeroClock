@@ -2,6 +2,9 @@ package com.dimje.zeroclock.screen.ask
 
 import androidx.lifecycle.viewModelScope
 import com.dimje.domain.logging.DataFlowLogger
+import com.dimje.domain.model.RejectionReason
+import com.dimje.domain.model.SubmitWorryResult
+import com.dimje.domain.model.WorryEntry
 import com.dimje.domain.time.DateProvider
 import com.dimje.domain.usecase.AlreadySubmittedTodayException
 import com.dimje.domain.usecase.GetWorryByDateUseCase
@@ -36,6 +39,8 @@ class AskViewModel @Inject constructor(
             }
             AskUiIntent.Submit -> submit()
             AskUiIntent.AppResumed -> refreshDateIfChanged()
+            AskUiIntent.DismissAlert -> reduce { copy(alert = null) }
+            is AskUiIntent.CallSupport -> postEffect(AskUiEffect.OpenDialer(intent.number))
             AskUiIntent.Retry -> loadToday()
             AskUiIntent.Back -> postEffect(AskUiEffect.NavigateBack)
         }
@@ -90,17 +95,29 @@ class AskViewModel @Inject constructor(
         viewModelScope.launch {
             val today = dateProvider.today()
             flowLogger.log(APP_MODULE, "고민 제출 시작", "date=$today, worryLength=${content.trim().length}")
-            reduce { copy(isSubmitting = true, errorMessage = null) }
+            reduce { copy(isSubmitting = true, errorMessage = null, alert = null) }
             runCatching { submitWorry(content, today) }
-                .onSuccess { entry ->
-                    flowLogger.log(APP_MODULE, "고민 제출 완료", "entryId=${entry.id}, date=${entry.date}")
-                    if (entry.date == dateProvider.today()) {
-                        reduce { copy(isSubmitting = false, savedEntry = entry, worry = entry.worry) }
-                    } else {
-                        reduce { copy(isSubmitting = false) }
-                        loadToday()
+                .onSuccess { result ->
+                    when (result) {
+                        is SubmitWorryResult.Saved -> handleSavedEntry(result.entry)
+                        is SubmitWorryResult.Rejected -> {
+                            flowLogger.log(
+                                APP_MODULE,
+                                "고민 제출 제외",
+                                "reason=${result.reason}",
+                            )
+                            val title = when (result.reason) {
+                                RejectionReason.INVALID -> "입력 내용을 확인해 주세요"
+                                RejectionReason.UNKNOWN -> "내용을 확인하지 못했어요"
+                            }
+                            reduce {
+                                copy(
+                                    isSubmitting = false,
+                                    alert = AskAlert(title = title, message = result.message),
+                                )
+                            }
+                        }
                     }
-                    postEffect(AskUiEffect.ShowMessage("오늘의 마음을 안전하게 기록했어요."))
                 }
                 .onFailure { error ->
                     flowLogger.log(APP_MODULE, "고민 제출 실패", "error=${error::class.simpleName}")
@@ -109,10 +126,36 @@ class AskViewModel @Inject constructor(
                     } else {
                         error.message ?: "기록을 저장하지 못했어요."
                     }
-                    reduce { copy(isSubmitting = false, errorMessage = message) }
-                    postEffect(AskUiEffect.ShowMessage(message))
+                    reduce {
+                        copy(
+                            isSubmitting = false,
+                            alert = AskAlert(
+                                title = if (error is AlreadySubmittedTodayException) {
+                                    "오늘의 기록을 확인해 주세요"
+                                } else {
+                                    "답변을 불러오지 못했어요"
+                                },
+                                message = message,
+                            ),
+                        )
+                    }
                 }
         }
+    }
+
+    private fun handleSavedEntry(entry: WorryEntry) {
+        flowLogger.log(
+            APP_MODULE,
+            "고민 제출 완료",
+            "entryId=${entry.id}, date=${entry.date}, riskLevel=${entry.riskLevel}",
+        )
+        if (entry.date == dateProvider.today()) {
+            reduce { copy(isSubmitting = false, savedEntry = entry, worry = entry.worry) }
+        } else {
+            reduce { copy(isSubmitting = false) }
+            loadToday()
+        }
+        postEffect(AskUiEffect.ShowMessage("오늘의 마음을 안전하게 기록했어요."))
     }
 
     private companion object {

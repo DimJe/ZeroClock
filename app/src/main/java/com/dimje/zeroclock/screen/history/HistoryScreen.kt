@@ -1,6 +1,7 @@
 package com.dimje.zeroclock.screen.history
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,11 +41,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dimje.domain.model.WorryEntry
+import com.dimje.domain.model.WorryRiskLevel
+import com.dimje.zeroclock.screen.component.WorryRiskLabel
+import com.dimje.zeroclock.screen.component.displayColor
+import com.dimje.zeroclock.screen.component.displayName
 import com.dimje.zeroclock.ui.theme.ZeroClockTheme
 import com.dimje.zeroclock.util.OnResumeEffect
 import java.time.LocalDate
@@ -133,7 +141,7 @@ private fun CalendarCard(
     onIntent: (HistoryUiIntent) -> Unit,
 ) {
     val days = remember(state.visibleMonth) { calendarDays(state.visibleMonth) }
-    val recordedDates = remember(state.entries) { state.entries.map { it.date }.toSet() }
+    val entriesByDate = remember(state.entries) { state.entries.associateBy { it.date } }
     val monthFormatter = remember { DateTimeFormatter.ofPattern("yyyy년 M월", Locale.KOREAN) }
 
     Surface(
@@ -167,9 +175,11 @@ private fun CalendarCard(
             days.chunked(7).forEach { week ->
                 Row(modifier = Modifier.fillMaxWidth()) {
                     week.forEach { date ->
+                        val entry = date?.let(entriesByDate::get)
                         CalendarDay(
                             date = date,
-                            hasEntry = date in recordedDates,
+                            hasEntry = entry != null,
+                            riskLevel = entry?.riskLevel,
                             selected = date != null && date == state.selectedDate,
                             onClick = { date?.let { onIntent(HistoryUiIntent.SelectDate(it)) } },
                             modifier = Modifier.weight(1f),
@@ -185,6 +195,7 @@ private fun CalendarCard(
 private fun CalendarDay(
     date: LocalDate?,
     hasEntry: Boolean,
+    riskLevel: WorryRiskLevel?,
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -196,11 +207,19 @@ private fun CalendarDay(
             .background(
                 color = when {
                     selected -> MaterialTheme.colorScheme.primary
-                    hasEntry -> MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
                     else -> Color.Transparent
                 },
                 shape = CircleShape,
             )
+            .semantics {
+                if (date != null) {
+                    contentDescription = if (hasEntry) {
+                        "${date.dayOfMonth}일, ${riskLevel.displayName()}"
+                    } else {
+                        "${date.dayOfMonth}일, 기록 없음"
+                    }
+                }
+            }
             .clickable(enabled = date != null, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -210,6 +229,16 @@ private fun CalendarDay(
                 color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                 fontWeight = if (hasEntry) FontWeight.Bold else FontWeight.Normal,
             )
+            if (hasEntry) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 4.dp)
+                        .size(8.dp)
+                        .background(riskLevel.displayColor(), CircleShape)
+                        .border(1.dp, MaterialTheme.colorScheme.surface, CircleShape),
+                )
+            }
         }
     }
 }
@@ -242,6 +271,8 @@ private fun EntryDetail(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             } else {
+                WorryRiskLabel(entry.riskLevel)
+                Spacer(Modifier.height(12.dp))
                 Text("나의 고민", color = MaterialTheme.colorScheme.primary)
                 Text(entry.worry, modifier = Modifier.padding(top = 6.dp))
                 Spacer(Modifier.height(18.dp))

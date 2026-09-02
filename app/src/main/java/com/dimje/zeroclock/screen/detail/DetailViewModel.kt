@@ -24,6 +24,7 @@ class DetailViewModel @Inject constructor(
 
     override fun onIntent(intent: DetailUiIntent) {
         when (intent) {
+            is DetailUiIntent.CallSupport -> postEffect(DetailUiEffect.OpenDialer(intent.number))
             DetailUiIntent.Retry -> loadEntry()
             DetailUiIntent.Back -> postEffect(DetailUiEffect.NavigateBack)
         }

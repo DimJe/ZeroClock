@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -28,6 +29,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -43,7 +45,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.dimje.zeroclock.ui.theme.ZeroClockTheme
+import com.dimje.zeroclock.screen.component.CrisisSupportCard
+import com.dimje.zeroclock.screen.component.WorryRiskLabel
 import com.dimje.zeroclock.util.OnResumeEffect
+import com.dimje.zeroclock.util.openDialer
+import com.dimje.domain.model.WorryRiskLevel
 
 @Composable
 fun AskRoute(
@@ -59,6 +65,7 @@ fun AskRoute(
         viewModel.effect.collect { effect ->
             when (effect) {
                 is AskUiEffect.ShowMessage -> Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
+                is AskUiEffect.OpenDialer -> context.openDialer(effect.number)
                 AskUiEffect.NavigateBack -> onBack()
             }
         }
@@ -73,6 +80,19 @@ fun AskScreen(
     state: AskUiState,
     onIntent: (AskUiIntent) -> Unit,
 ) {
+    state.alert?.let { alert ->
+        AlertDialog(
+            onDismissRequest = { onIntent(AskUiIntent.DismissAlert) },
+            title = { Text(alert.title) },
+            text = { Text(alert.message) },
+            confirmButton = {
+                TextButton(onClick = { onIntent(AskUiIntent.DismissAlert) }) {
+                    Text("확인")
+                }
+            },
+        )
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -147,6 +167,8 @@ fun AskScreen(
                         color = MaterialTheme.colorScheme.surfaceVariant,
                     ) {
                         Column(modifier = Modifier.padding(20.dp)) {
+                            WorryRiskLabel(state.savedEntry.riskLevel)
+                            Spacer(Modifier.height(12.dp))
                             Text("당신에게 보내는 답장", fontWeight = FontWeight.SemiBold)
                             Spacer(Modifier.height(12.dp))
                             Text(
@@ -154,6 +176,11 @@ fun AskScreen(
                                 style = MaterialTheme.typography.bodyLarge,
                             )
                         }
+                    }
+                    if (state.savedEntry.riskLevel == WorryRiskLevel.CRISIS) {
+                        CrisisSupportCard(
+                            onCall = { number -> onIntent(AskUiIntent.CallSupport(number)) },
+                        )
                     }
                     Text(
                         "답변은 정서적 지지를 위한 내용이며 의료적 진단이나 치료를 대신하지 않습니다.",

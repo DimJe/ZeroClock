@@ -9,7 +9,13 @@ data class AskUiState(
     val savedEntry: WorryEntry? = null,
     val isSubmitting: Boolean = false,
     val errorMessage: String? = null,
+    val alert: AskAlert? = null,
 ) : BaseUiState {
     val canSubmit: Boolean
         get() = worry.isNotBlank() && !isSubmitting && savedEntry == null
 }
+
+data class AskAlert(
+    val title: String,
+    val message: String,
+)
