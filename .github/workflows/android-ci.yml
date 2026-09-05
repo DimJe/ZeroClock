@@ -45,3 +45,66 @@ jobs:
 
       - name: 디버그 APK 빌드
         run: ./gradlew assembleDebug --stacktrace
+
+      - name: Discord CI 결과 알림
+        if: ${{ success() || failure() }}
+        continue-on-error: true
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          JOB_STATUS: ${{ job.status }}
+          REPOSITORY: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message || github.event.pull_request.title }}
+          ACTOR: ${{ github.actor }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "::warning::DISCORD_WEBHOOK_URL Secret이 없어 Discord 알림을 생략합니다."
+            exit 0
+          fi
+
+          if [ "$JOB_STATUS" = "success" ]; then
+            TITLE="✅ Android CI 성공"
+            COLOR=5763719
+          else
+            TITLE="❌ Android CI 실패"
+            COLOR=15548997
+          fi
+
+          SHORT_SHA="${COMMIT_SHA:0:7}"
+          COMMIT_TITLE="${COMMIT_MESSAGE%%$'\n'*}"
+          COMMIT_TITLE="${COMMIT_TITLE:0:200}"
+          if [ -z "$COMMIT_TITLE" ]; then
+            COMMIT_TITLE="커밋 메시지 없음"
+          fi
+          PAYLOAD=$(jq -n \
+            --arg title "$TITLE" \
+            --arg repository "$REPOSITORY" \
+            --arg branch "$BRANCH" \
+            --arg commit "$SHORT_SHA" \
+            --arg commitTitle "$COMMIT_TITLE" \
+            --arg actor "$ACTOR" \
+            --arg runUrl "$RUN_URL" \
+            --argjson color "$COLOR" \
+            '{
+              username: "ZeroClock CI",
+              allowed_mentions: { parse: [] },
+              embeds: [{
+                title: $title,
+                color: $color,
+                fields: [
+                  { name: "저장소", value: $repository, inline: true },
+                  { name: "브랜치", value: $branch, inline: true },
+                  { name: "커밋", value: $commit, inline: true },
+                  { name: "실행자", value: $actor, inline: true },
+                  { name: "커밋 메시지", value: $commitTitle, inline: false }
+                ],
+                description: ("[GitHub Actions 실행 결과 확인](" + $runUrl + ")")
+              }]
+            }')
+
+          curl --fail-with-body --silent --show-error \
+            -H "Content-Type: application/json" \
+            --data "$PAYLOAD" \
+            "$DISCORD_WEBHOOK_URL"
