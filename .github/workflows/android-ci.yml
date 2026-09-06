@@ -40,6 +40,9 @@ jobs:
       - name: 단위 테스트 실행
         run: ./gradlew test --stacktrace
 
+      - name: Android 계측 테스트 코드 컴파일
+        run: ./gradlew assembleDebugAndroidTest --stacktrace
+
       - name: Android Lint 실행
         run: ./gradlew lintDebug --stacktrace
 
