@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import com.dimje.domain.model.WorryEntry
 import com.dimje.domain.model.WorryRiskLevel
 import com.dimje.zeroclock.ui.theme.ZeroClockTheme
@@ -99,8 +100,8 @@ class AskScreenTest {
             }
         }
 
-        composeRule.onNodeWithText("자살예방 상담 109").assertIsDisplayed()
-        composeRule.onNodeWithText("경찰 112").assertIsDisplayed()
-        composeRule.onNodeWithText("구급 119").assertIsDisplayed()
+        composeRule.onNodeWithText("자살예방 상담 109").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("경찰 112").performScrollTo().assertIsDisplayed()
+        composeRule.onNodeWithText("구급 119").performScrollTo().assertIsDisplayed()
     }
 }
