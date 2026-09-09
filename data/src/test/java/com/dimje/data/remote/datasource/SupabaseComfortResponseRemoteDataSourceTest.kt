@@ -4,10 +4,8 @@ import com.dimje.data.remote.SupabaseWorryResponseService
 import com.dimje.domain.logging.DataFlowLogger
 import com.dimje.domain.model.ComfortResponseResult
 import com.dimje.domain.model.WorryRiskLevel
+import com.google.gson.JsonParser
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
@@ -63,7 +61,7 @@ class SupabaseComfortResponseRemoteDataSourceTest {
         assertTrue(request.getHeader("Content-Type").orEmpty().startsWith("application/json"))
         assertEquals(
             "내일 발표가 걱정돼요.",
-            Json.parseToJsonElement(request.body.readUtf8()).jsonObject["worry"]?.jsonPrimitive?.content,
+            JsonParser.parseString(request.body.readUtf8()).asJsonObject["worry"].asString,
         )
         assertTrue(flowLogger.events.any { it.contains("Supabase 요청 전송") })
         assertTrue(flowLogger.events.any { it.contains("Supabase 답변 수신") })
