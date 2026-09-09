@@ -51,4 +51,24 @@ class HomeViewModelTest {
 
         assertEquals(nextDate, viewModel.uiState.value.todayEntry?.date)
     }
+
+    @Test
+    fun `현재 달의 고민만 별 개수에 반영한다`() = runTest {
+        val date = LocalDate.of(2026, 9, 10)
+        val entries = listOf(
+            worryEntry(1, LocalDate.of(2026, 8, 31)),
+            worryEntry(2, LocalDate.of(2026, 9, 1)),
+            worryEntry(3, date),
+            worryEntry(4, LocalDate.of(2026, 10, 1)),
+        )
+        val viewModel = HomeViewModel(
+            observeWorries = ObserveWorriesUseCase(FakeWorryRepository(entries)),
+            dateProvider = FakeDateProvider(date),
+        )
+
+        advanceUntilIdle()
+
+        assertEquals(2, viewModel.uiState.value.monthlyWorryCount)
+        assertEquals(202609L, viewModel.uiState.value.starSeed)
+    }
 }

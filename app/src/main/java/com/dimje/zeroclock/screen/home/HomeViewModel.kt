@@ -9,6 +9,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import java.time.YearMonth
 import javax.inject.Inject
 
 @HiltViewModel
@@ -47,17 +48,24 @@ class HomeViewModel @Inject constructor(
                 else copy(errorMessage = null)
             }
             combine(observeWorries(), dateProvider.observeDateChanges()) { entries, date ->
-                date to entries.firstOrNull { it.date == date }
+                val currentMonth = YearMonth.from(date)
+                Triple(
+                    date,
+                    entries.firstOrNull { it.date == date },
+                    entries.count { YearMonth.from(it.date) == currentMonth },
+                )
             }
                 .catch { error ->
                     reduce { copy(isLoading = false, errorMessage = error.message ?: "기록을 불러오지 못했어요.") }
                 }
-                .collect { (date, todayEntry) ->
+                .collect { (date, todayEntry, monthlyWorryCount) ->
                     currentDate = date
                     reduce {
                         copy(
                             isLoading = false,
                             todayEntry = todayEntry,
+                            monthlyWorryCount = monthlyWorryCount,
+                            starSeed = date.year * 100L + date.monthValue,
                             errorMessage = null,
                         )
                     }

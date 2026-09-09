@@ -48,7 +48,10 @@ fun HomeScreen(
     onIntent: (HomeUiIntent) -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
-        HomeBackground()
+        HomeBackground(
+            starCount = state.monthlyWorryCount,
+            starSeed = state.starSeed,
+        )
         HomeHeader(hasTodayEntry = state.todayEntry != null)
 
         when {
@@ -76,6 +79,13 @@ fun HomeScreen(
 @Composable
 private fun HomeScreenPreview() {
     ZeroClockTheme {
-        HomeScreen(state = HomeUiState(isLoading = false), onIntent = {})
+        HomeScreen(
+            state = HomeUiState(
+                isLoading = false,
+                monthlyWorryCount = 15,
+                starSeed = 202609L,
+            ),
+            onIntent = {},
+        )
     }
 }

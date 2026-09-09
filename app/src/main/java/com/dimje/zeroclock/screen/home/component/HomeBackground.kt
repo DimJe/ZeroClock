@@ -16,7 +16,11 @@ import com.dimje.zeroclock.R
 import com.dimje.zeroclock.ui.theme.ZeroClockTheme
 
 @Composable
-fun HomeBackground(modifier: Modifier = Modifier) {
+fun HomeBackground(
+    starCount: Int,
+    starSeed: Long,
+    modifier: Modifier = Modifier,
+) {
     Box(modifier = modifier.fillMaxSize()) {
         Image(
             painter = painterResource(R.drawable.main_background_v1),
@@ -34,11 +38,15 @@ fun HomeBackground(modifier: Modifier = Modifier) {
                     ),
                 ),
         )
+        MonthlyStarField(
+            starCount = starCount,
+            seed = starSeed,
+        )
     }
 }
 
 @Preview(widthDp = 360, heightDp = 800)
 @Composable
 private fun HomeBackgroundPreview() {
-    ZeroClockTheme { HomeBackground() }
+    ZeroClockTheme { HomeBackground(starCount = 15, starSeed = 202609L) }
 }
