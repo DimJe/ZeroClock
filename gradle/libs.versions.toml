@@ -15,7 +15,9 @@ room = "2.8.4"
 coroutines = "1.11.0"
 retrofit = "3.0.0"
 okhttp = "5.3.0"
+splashscreen = "1.2.0"
 [libraries]
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

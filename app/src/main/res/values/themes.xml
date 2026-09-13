@@ -1,5 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.ZeroClock" parent="android:Theme.Material.NoActionBar" />
+    <style name="Theme.ZeroClock" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#000618</item>
+        <item name="android:statusBarColor">#000618</item>
+        <item name="android:navigationBarColor">#050A16</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+
+    <style name="Theme.ZeroClock.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#000618</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_star</item>
+        <item name="postSplashScreenTheme">@style/Theme.ZeroClock</item>
+        <item name="android:statusBarColor">#000618</item>
+        <item name="android:navigationBarColor">#050A16</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
 </resources>
