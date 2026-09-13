@@ -27,8 +27,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import com.dimje.zeroclock.screen.Screen
 import com.dimje.zeroclock.screen.home.HomeUiIntent
+import com.dimje.zeroclock.screen.home.HomeGuideStep
 import com.dimje.zeroclock.ui.theme.ZeroClockTheme
 
 @Composable
@@ -37,6 +40,7 @@ fun HomeFabMenu(
     hasTodayEntry: Boolean,
     onIntent: (HomeUiIntent) -> Unit,
     modifier: Modifier = Modifier,
+    guideStep: HomeGuideStep? = null,
 ) {
     Column(
         modifier = modifier,
@@ -52,19 +56,48 @@ fun HomeFabMenu(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                HomeMenuFab(if (hasTodayEntry) "오늘 기록 보기" else "마음 기록", Icons.Default.Edit) {
+                HomeMenuFab(
+                    if (hasTodayEntry) "오늘 기록 보기" else "마음 기록",
+                    Icons.Default.Edit,
+                    modifier = Modifier.onGloballyPositioned {
+                        if (guideStep == HomeGuideStep.WRITE) {
+                            onIntent(HomeUiIntent.GuideTargetMeasured(guideStep, it.boundsInRoot()))
+                        }
+                    },
+                ) {
                     onIntent(HomeUiIntent.SelectMenu(Screen.Write.route))
                 }
-                HomeMenuFab("캘린더", Icons.Default.DateRange) {
+                HomeMenuFab(
+                    "캘린더",
+                    Icons.Default.DateRange,
+                    modifier = Modifier.onGloballyPositioned {
+                        if (guideStep == HomeGuideStep.CALENDAR) {
+                            onIntent(HomeUiIntent.GuideTargetMeasured(guideStep, it.boundsInRoot()))
+                        }
+                    },
+                ) {
                     onIntent(HomeUiIntent.SelectMenu(Screen.Calendar.route))
                 }
-                HomeMenuFab("마음 분석", Icons.Default.Search) {
+                HomeMenuFab(
+                    "마음 분석",
+                    Icons.Default.Search,
+                    modifier = Modifier.onGloballyPositioned {
+                        if (guideStep == HomeGuideStep.ANALYSIS) {
+                            onIntent(HomeUiIntent.GuideTargetMeasured(guideStep, it.boundsInRoot()))
+                        }
+                    },
+                ) {
                     onIntent(HomeUiIntent.SelectMenu(Screen.Analysis.route))
                 }
             }
         }
 
         FloatingActionButton(
+            modifier = Modifier.onGloballyPositioned {
+                if (guideStep == HomeGuideStep.MENU) {
+                    onIntent(HomeUiIntent.GuideTargetMeasured(guideStep, it.boundsInRoot()))
+                }
+            },
             onClick = { onIntent(HomeUiIntent.ToggleMenu) },
             containerColor = Color(0xFFB9C8FF),
             contentColor = Color(0xFF0A1733),
@@ -81,9 +114,11 @@ fun HomeFabMenu(
 private fun HomeMenuFab(
     label: String,
     icon: ImageVector,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     ExtendedFloatingActionButton(
+        modifier = modifier,
         onClick = onClick,
         containerColor = Color(0xE61B2946),
         contentColor = Color.White,

@@ -3,6 +3,9 @@ package com.dimje.zeroclock.di
 import com.dimje.domain.logging.DataFlowLogger
 import com.dimje.domain.repository.ComfortResponseRepository
 import com.dimje.domain.repository.WorryRepository
+import com.dimje.domain.repository.OnboardingRepository
+import com.dimje.domain.usecase.GetOnboardingCompletedUseCase
+import com.dimje.domain.usecase.CompleteOnboardingUseCase
 import com.dimje.domain.usecase.AnalyzeWorriesUseCase
 import com.dimje.domain.usecase.GetWorryByDateUseCase
 import com.dimje.domain.usecase.ObserveWorriesUseCase
@@ -15,6 +18,14 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 object UseCaseModule {
+    @Provides
+    fun provideGetOnboardingCompletedUseCase(repository: OnboardingRepository) =
+        GetOnboardingCompletedUseCase(repository)
+
+    @Provides
+    fun provideCompleteOnboardingUseCase(repository: OnboardingRepository) =
+        CompleteOnboardingUseCase(repository)
+
     @Provides
     fun provideObserveWorriesUseCase(
         repository: WorryRepository,

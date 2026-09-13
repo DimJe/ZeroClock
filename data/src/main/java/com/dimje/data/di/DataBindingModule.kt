@@ -1,6 +1,10 @@
 package com.dimje.data.di
 
 import com.dimje.data.local.datasource.RoomWorryLocalDataSource
+import com.dimje.data.local.datasource.DataStoreOnboardingLocalDataSource
+import com.dimje.data.local.datasource.OnboardingLocalDataSource
+import com.dimje.data.repository.OnboardingRepositoryImpl
+import com.dimje.domain.repository.OnboardingRepository
 import com.dimje.data.local.datasource.WorryLocalDataSource
 import com.dimje.data.remote.datasource.ComfortResponseRemoteDataSource
 import com.dimje.data.remote.datasource.SupabaseComfortResponseRemoteDataSource
@@ -17,6 +21,16 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class DataBindingModule {
+    @Binds
+    @Singleton
+    abstract fun bindOnboardingLocalDataSource(
+        dataSource: DataStoreOnboardingLocalDataSource,
+    ): OnboardingLocalDataSource
+
+    @Binds
+    @Singleton
+    abstract fun bindOnboardingRepository(repository: OnboardingRepositoryImpl): OnboardingRepository
+
     @Binds
     @Singleton
     abstract fun bindWorryLocalDataSource(dataSource: RoomWorryLocalDataSource): WorryLocalDataSource

@@ -53,6 +53,7 @@ ksp {
 dependencies {
 
     implementation(project(":domain"))
+    implementation(libs.androidx.datastore.preferences)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

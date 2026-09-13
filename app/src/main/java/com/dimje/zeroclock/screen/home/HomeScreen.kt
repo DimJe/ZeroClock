@@ -7,18 +7,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.activity.compose.BackHandler
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dimje.zeroclock.screen.component.ScreenLoadingContent
 import com.dimje.zeroclock.screen.home.component.HomeBackground
 import com.dimje.zeroclock.screen.home.component.HomeErrorContent
 import com.dimje.zeroclock.screen.home.component.HomeFabMenu
-import com.dimje.zeroclock.screen.home.component.HomeHeader
+import com.dimje.zeroclock.screen.home.component.HomeGuideOverlay
 import com.dimje.zeroclock.ui.theme.ZeroClockTheme
 import com.dimje.zeroclock.util.OnResumeEffect
 
@@ -47,31 +52,67 @@ fun HomeScreen(
     state: HomeUiState,
     onIntent: (HomeUiIntent) -> Unit,
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        HomeBackground(
-            starCount = state.monthlyWorryCount,
-            starSeed = state.starSeed,
-        )
-        HomeHeader(hasTodayEntry = state.todayEntry != null)
+    val guideVisible = state.guideStep != null && !state.isLoading && state.errorMessage == null
+    BackHandler(enabled = guideVisible) { onIntent(HomeUiIntent.SkipGuide) }
+    Box(
+        modifier = Modifier.fillMaxSize().onGloballyPositioned {
+            if (guideVisible && state.guideStep == HomeGuideStep.STARS) {
+                val bounds = it.boundsInRoot()
+                onIntent(
+                    HomeUiIntent.GuideTargetMeasured(
+                        HomeGuideStep.STARS,
+                        Rect(
+                            bounds.left + bounds.width * 0.08f,
+                            bounds.top + bounds.height * 0.08f,
+                            bounds.right - bounds.width * 0.08f,
+                            bounds.top + bounds.height * 0.48f,
+                        ),
+                    ),
+                )
+            }
+        },
+    ) {
+        Box(
+            modifier = Modifier.fillMaxSize().then(
+                if (guideVisible) Modifier.clearAndSetSemantics {} else Modifier,
+            ),
+        ) {
+            HomeBackground(
+                starCount = state.monthlyWorryCount,
+                starSeed = state.starSeed,
+            )
 
-        when {
-            state.isLoading -> ScreenLoadingContent(color = Color.White)
-            state.errorMessage != null -> HomeErrorContent(
-                message = state.errorMessage,
-                onRetry = { onIntent(HomeUiIntent.Retry) },
-                modifier = Modifier.align(Alignment.Center),
+            when {
+                state.isLoading -> ScreenLoadingContent(color = Color.White)
+                state.errorMessage != null -> HomeErrorContent(
+                    message = state.errorMessage,
+                    onRetry = { onIntent(HomeUiIntent.Retry) },
+                    modifier = Modifier.align(Alignment.Center),
+                )
+            }
+
+            HomeFabMenu(
+                expanded = state.isMenuExpanded,
+                hasTodayEntry = state.todayEntry != null,
+                onIntent = onIntent,
+                guideStep = if (guideVisible) state.guideStep else null,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .navigationBarsPadding()
+                    .padding(20.dp),
             )
         }
 
-        HomeFabMenu(
-            expanded = state.isMenuExpanded,
-            hasTodayEntry = state.todayEntry != null,
-            onIntent = onIntent,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .navigationBarsPadding()
-                .padding(20.dp),
-        )
+        if (guideVisible) {
+            HomeGuideOverlay(
+                step = requireNotNull(state.guideStep),
+                target = state.guideTarget,
+                isSaving = state.isSavingGuide,
+                errorMessage = state.guideError,
+                onNext = { onIntent(HomeUiIntent.NextGuide) },
+                onSkip = { onIntent(HomeUiIntent.SkipGuide) },
+            )
+        }
     }
 }
 

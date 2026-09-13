@@ -1,6 +1,9 @@
 package com.dimje.zeroclock.screen.home
 
 import com.dimje.domain.usecase.ObserveWorriesUseCase
+import com.dimje.domain.usecase.GetOnboardingCompletedUseCase
+import com.dimje.domain.usecase.CompleteOnboardingUseCase
+import com.dimje.zeroclock.testing.FakeOnboardingRepository
 import com.dimje.zeroclock.testing.FakeDateProvider
 import com.dimje.zeroclock.testing.FakeWorryRepository
 import com.dimje.zeroclock.testing.MainDispatcherRule
@@ -26,6 +29,8 @@ class HomeViewModelTest {
         val viewModel = HomeViewModel(
             observeWorries = ObserveWorriesUseCase(FakeWorryRepository(listOf(worryEntry(1, date)))),
             dateProvider = dateProvider,
+            getOnboardingCompleted = GetOnboardingCompletedUseCase(FakeOnboardingRepository()),
+            completeOnboarding = CompleteOnboardingUseCase(FakeOnboardingRepository()),
         )
 
         advanceUntilIdle()
@@ -41,7 +46,11 @@ class HomeViewModelTest {
         val nextDate = firstDate.plusDays(1)
         val dateProvider = FakeDateProvider(firstDate)
         val repository = FakeWorryRepository(listOf(worryEntry(1, firstDate), worryEntry(2, nextDate)))
-        val viewModel = HomeViewModel(ObserveWorriesUseCase(repository), dateProvider)
+        val settings = FakeOnboardingRepository()
+        val viewModel = HomeViewModel(
+            ObserveWorriesUseCase(repository), dateProvider,
+            GetOnboardingCompletedUseCase(settings), CompleteOnboardingUseCase(settings),
+        )
 
         advanceUntilIdle()
         assertEquals(firstDate, viewModel.uiState.value.todayEntry?.date)
@@ -64,6 +73,8 @@ class HomeViewModelTest {
         val viewModel = HomeViewModel(
             observeWorries = ObserveWorriesUseCase(FakeWorryRepository(entries)),
             dateProvider = FakeDateProvider(date),
+            getOnboardingCompleted = GetOnboardingCompletedUseCase(FakeOnboardingRepository()),
+            completeOnboarding = CompleteOnboardingUseCase(FakeOnboardingRepository()),
         )
 
         advanceUntilIdle()
