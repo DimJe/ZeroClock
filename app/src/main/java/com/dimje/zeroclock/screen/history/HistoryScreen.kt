@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -24,16 +25,17 @@ import com.dimje.zeroclock.screen.history.component.CalendarCard
 import com.dimje.zeroclock.screen.history.component.HistoryEntryCard
 import com.dimje.zeroclock.ui.theme.ZeroClockTheme
 import com.dimje.zeroclock.util.OnResumeEffect
+import com.dimje.zeroclock.util.openDialer
 import java.time.LocalDate
 import java.time.YearMonth
 
 @Composable
 fun HistoryRoute(
     onBack: () -> Unit,
-    onNavigateToDetail: (LocalDate) -> Unit,
     viewModel: HistoryViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     OnResumeEffect { viewModel.onIntent(HistoryUiIntent.AppResumed) }
 
@@ -41,7 +43,7 @@ fun HistoryRoute(
         viewModel.effect.collect { effect ->
             when (effect) {
                 HistoryUiEffect.NavigateBack -> onBack()
-                is HistoryUiEffect.NavigateToDetail -> onNavigateToDetail(effect.date)
+                is HistoryUiEffect.OpenDialer -> context.openDialer(effect.number)
             }
         }
     }
@@ -83,7 +85,7 @@ fun HistoryScreen(
                 HistoryEntryCard(
                     entry = state.selectedEntry,
                     selectedDate = state.selectedDate,
-                    onClick = { onIntent(HistoryUiIntent.OpenDetail(it.date)) },
+                    onCall = { onIntent(HistoryUiIntent.CallSupport(it)) },
                 )
             }
         }

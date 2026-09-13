@@ -11,12 +11,13 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.dimje.domain.model.WorryEntry
+import com.dimje.domain.model.WorryRiskLevel
+import com.dimje.zeroclock.screen.component.CrisisSupportCard
 import com.dimje.zeroclock.screen.component.WorryRiskLabel
 import com.dimje.zeroclock.ui.theme.ZeroClockTheme
 import java.time.LocalDate
@@ -27,14 +28,12 @@ import java.util.Locale
 fun HistoryEntryCard(
     entry: WorryEntry?,
     selectedDate: LocalDate?,
-    onClick: (WorryEntry) -> Unit,
+    onCall: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val dateFormatter = remember { DateTimeFormatter.ofPattern("M월 d일 EEEE", Locale.KOREAN) }
     Surface(
         modifier = modifier.fillMaxWidth(),
-        onClick = { entry?.let(onClick) },
-        enabled = entry != null,
         shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 2.dp,
@@ -56,12 +55,10 @@ fun HistoryEntryCard(
                 Spacer(Modifier.height(18.dp))
                 Text("받은 답장", color = MaterialTheme.colorScheme.primary)
                 Text(entry.response, modifier = Modifier.padding(top = 6.dp))
-                Text(
-                    text = "자세히 보기",
-                    modifier = Modifier.align(Alignment.End).padding(top = 16.dp),
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold,
-                )
+                if (entry.riskLevel == WorryRiskLevel.CRISIS) {
+                    Spacer(Modifier.height(18.dp))
+                    CrisisSupportCard(onCall = onCall)
+                }
             }
         }
     }
@@ -75,7 +72,7 @@ private fun HistoryEntryCardPreview() {
         HistoryEntryCard(
             entry = WorryEntry(1, "내일 일정이 걱정돼요.", "오늘은 푹 쉬어도 괜찮아요.", date, 0L),
             selectedDate = date,
-            onClick = {},
+            onCall = {},
         )
     }
 }

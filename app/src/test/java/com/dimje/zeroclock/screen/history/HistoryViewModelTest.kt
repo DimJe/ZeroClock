@@ -9,6 +9,7 @@ import java.time.YearMonth
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.flow.first
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -17,6 +18,17 @@ import org.junit.Test
 class HistoryViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
+
+    @Test
+    fun `상담 전화 요청은 다이얼러 열기 이벤트를 전달한다`() = runTest {
+        val viewModel = HistoryViewModel(
+            ObserveWorriesUseCase(FakeWorryRepository()),
+            FakeDateProvider(LocalDate.of(2026, 9, 13)),
+        )
+        viewModel.onIntent(HistoryUiIntent.CallSupport("109"))
+        advanceUntilIdle()
+        assertEquals(HistoryUiEffect.OpenDialer("109"), viewModel.effect.first())
+    }
 
     @Test
     fun `오늘을 보고 있을 때 자정이 지나면 다음 달과 날짜를 선택한다`() = runTest {

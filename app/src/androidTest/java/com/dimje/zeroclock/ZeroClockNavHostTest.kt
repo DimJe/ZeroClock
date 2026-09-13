@@ -10,7 +10,6 @@ import androidx.compose.ui.test.performClick
 import androidx.navigation.compose.rememberNavController
 import com.dimje.zeroclock.screen.Screen
 import com.dimje.zeroclock.ui.theme.ZeroClockTheme
-import java.time.LocalDate
 import org.junit.Rule
 import org.junit.Test
 
@@ -30,13 +29,13 @@ class ZeroClockNavHostTest {
     }
 
     @Test
-    fun 캘린더에서_선택한_날짜의_상세_화면으로_이동한다() {
+    fun 홈에서_캘린더로_이동하고_뒤로_돌아온다() {
         setNavHostContent()
 
         composeRule.onNodeWithText("캘린더 열기").performClick()
-        composeRule.onNodeWithText("상세 열기").performClick()
-
-        composeRule.onNodeWithText("테스트 상세 2026-09-06").assertIsDisplayed()
+        composeRule.onNodeWithText("테스트 캘린더").assertIsDisplayed()
+        composeRule.onNodeWithText("뒤로가기").performClick()
+        composeRule.onNodeWithText("테스트 홈").assertIsDisplayed()
     }
 
     private fun setNavHostContent() {
@@ -63,16 +62,15 @@ class ZeroClockNavHostTest {
                             }
                         }
                     },
-                    historyContent = { _, onDetail ->
+                    historyContent = { onBack ->
                         Column {
                             Text("테스트 캘린더")
-                            Button(onClick = { onDetail(LocalDate.of(2026, 9, 6)) }) {
-                                Text("상세 열기")
+                            Button(onClick = onBack) {
+                                Text("뒤로가기")
                             }
                         }
                     },
                     analysisContent = { Text("테스트 분석") },
-                    detailContent = { _, date -> Text("테스트 상세 $date") },
                 )
             }
         }
