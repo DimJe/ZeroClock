@@ -1,6 +1,5 @@
 package com.dimje.zeroclock.screen.ask
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,10 +8,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -29,6 +32,7 @@ import com.dimje.zeroclock.screen.component.ScreenTopBar
 import com.dimje.zeroclock.ui.theme.ZeroClockTheme
 import com.dimje.zeroclock.util.OnResumeEffect
 import com.dimje.zeroclock.util.openDialer
+import kotlinx.coroutines.launch
 
 @Composable
 fun AskRoute(
@@ -37,26 +41,40 @@ fun AskRoute(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
 
     OnResumeEffect { viewModel.onIntent(AskUiIntent.AppResumed) }
 
     LaunchedEffect(viewModel) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is AskUiEffect.ShowMessage -> Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
+                is AskUiEffect.ShowMessage -> launch { snackbarHostState.showSnackbar(effect.message) }
                 is AskUiEffect.OpenDialer -> context.openDialer(effect.number)
                 AskUiEffect.NavigateBack -> onBack()
             }
         }
     }
 
-    AskScreen(state = state, onIntent = viewModel::onIntent)
+    AskScreen(
+        state = state,
+        onIntent = viewModel::onIntent,
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        },
+    )
 }
 
 @Composable
 fun AskScreen(
     state: AskUiState,
     onIntent: (AskUiIntent) -> Unit,
+    snackbarHost: @Composable () -> Unit = {},
 ) {
     state.alert?.let { alert ->
         AskAlertDialog(alert = alert, onDismiss = { onIntent(AskUiIntent.DismissAlert) })
@@ -65,6 +83,7 @@ fun AskScreen(
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = { ScreenTopBar(title = "오늘의 마음", onBack = { onIntent(AskUiIntent.Back) }) },
+        snackbarHost = snackbarHost,
     ) { paddingValues ->
         if (state.isLoading) {
             ScreenLoadingContent(modifier = Modifier.padding(paddingValues))

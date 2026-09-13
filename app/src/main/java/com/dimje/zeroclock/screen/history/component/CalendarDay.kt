@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -38,6 +39,7 @@ fun CalendarDay(
         modifier = modifier
             .aspectRatio(1f)
             .padding(3.dp)
+            .clip(CircleShape)
             .background(
                 color = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
                 shape = CircleShape,
