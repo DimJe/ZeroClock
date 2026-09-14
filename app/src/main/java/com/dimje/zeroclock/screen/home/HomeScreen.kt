@@ -1,5 +1,13 @@
 package com.dimje.zeroclock.screen.home
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -24,6 +32,7 @@ import com.dimje.zeroclock.screen.home.component.HomeBackground
 import com.dimje.zeroclock.screen.home.component.HomeErrorContent
 import com.dimje.zeroclock.screen.home.component.HomeFabMenu
 import com.dimje.zeroclock.screen.home.component.HomeGuideOverlay
+import com.dimje.zeroclock.screen.home.component.ReminderPermissionInfoDialog
 import com.dimje.zeroclock.ui.theme.ZeroClockTheme
 import com.dimje.zeroclock.util.OnResumeEffect
 
@@ -33,6 +42,16 @@ fun HomeRoute(
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    val needsNotificationPermission = Build.VERSION.SDK_INT >= 33 &&
+        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+
+    LaunchedEffect(state.showReminderPermissionInfo) {
+        if (state.showReminderPermissionInfo && !needsNotificationPermission) {
+            viewModel.onIntent(HomeUiIntent.DismissReminderPermissionInfo)
+        }
+    }
 
     OnResumeEffect { viewModel.onIntent(HomeUiIntent.AppResumed) }
 
@@ -40,11 +59,20 @@ fun HomeRoute(
         viewModel.effect.collect { effect ->
             when (effect) {
                 is HomeUiEffect.Navigate -> onNavigate(effect.route)
+                HomeUiEffect.RequestNotificationPermission -> if (Build.VERSION.SDK_INT >= 33 &&
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+                ) permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
     }
 
     HomeScreen(state = state, onIntent = viewModel::onIntent)
+    if (state.showReminderPermissionInfo && needsNotificationPermission) {
+        ReminderPermissionInfoDialog(
+            onConfirm = { viewModel.onIntent(HomeUiIntent.ConfirmReminderPermission) },
+            onDismiss = { viewModel.onIntent(HomeUiIntent.DismissReminderPermissionInfo) },
+        )
+    }
 }
 
 @Composable

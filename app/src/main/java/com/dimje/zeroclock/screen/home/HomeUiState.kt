@@ -15,4 +15,5 @@ data class HomeUiState(
     val guideTarget: Rect? = null,
     val isSavingGuide: Boolean = false,
     val guideError: String? = null,
+    val showReminderPermissionInfo: Boolean = false,
 ) : BaseUiState

@@ -6,6 +6,7 @@ import com.dimje.domain.time.DateProvider
 import com.dimje.domain.usecase.ObserveWorriesUseCase
 import com.dimje.domain.usecase.GetOnboardingCompletedUseCase
 import com.dimje.domain.usecase.CompleteOnboardingUseCase
+import com.dimje.domain.usecase.ConsumeReminderPermissionRequestUseCase
 import kotlinx.coroutines.CancellationException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -21,6 +22,7 @@ class HomeViewModel @Inject constructor(
     private val dateProvider: DateProvider,
     private val getOnboardingCompleted: GetOnboardingCompletedUseCase,
     private val completeOnboarding: CompleteOnboardingUseCase,
+    private val consumeReminderPermissionRequest: ConsumeReminderPermissionRequestUseCase,
 ) : BaseViewModel<HomeUiState, HomeUiIntent, HomeUiEffect>(HomeUiState()) {
     private var currentDate = dateProvider.today()
     private var observerJob: Job? = null
@@ -30,6 +32,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 if (!getOnboardingCompleted()) reduce { copy(guideStep = HomeGuideStep.MENU) }
+                else prepareReminderPermission()
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
@@ -64,6 +67,12 @@ class HomeViewModel @Inject constructor(
                 }
             }
             HomeUiIntent.SkipGuide -> finishGuide()
+            HomeUiIntent.ConfirmReminderPermission -> {
+                if (!uiState.value.showReminderPermissionInfo) return
+                reduce { copy(showReminderPermissionInfo = false) }
+                postEffect(HomeUiEffect.RequestNotificationPermission)
+            }
+            HomeUiIntent.DismissReminderPermissionInfo -> reduce { copy(showReminderPermissionInfo = false) }
             is HomeUiIntent.GuideTargetMeasured -> if (intent.step == uiState.value.guideStep) {
                 reduce { copy(guideTarget = intent.bounds) }
             }
@@ -77,11 +86,22 @@ class HomeViewModel @Inject constructor(
             try {
                 completeOnboarding()
                 reduce { copy(guideStep = null, guideTarget = null, isMenuExpanded = false, isSavingGuide = false) }
+                prepareReminderPermission()
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
                 reduce { copy(isSavingGuide = false, guideError = "안내 완료 상태를 저장하지 못했어요. 다시 시도해 주세요.") }
             }
+        }
+    }
+
+    private suspend fun prepareReminderPermission() {
+        try {
+            if (consumeReminderPermissionRequest()) reduce { copy(showReminderPermissionInfo = true) }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            // 권한 안내 저장 실패가 기존 기록 기능을 막지 않도록 합니다.
         }
     }
 

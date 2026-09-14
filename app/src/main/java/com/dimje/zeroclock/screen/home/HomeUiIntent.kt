@@ -10,5 +10,7 @@ sealed interface HomeUiIntent : BaseUiIntent {
     data object Retry : HomeUiIntent
     data object NextGuide : HomeUiIntent
     data object SkipGuide : HomeUiIntent
+    data object ConfirmReminderPermission : HomeUiIntent
+    data object DismissReminderPermissionInfo : HomeUiIntent
     data class GuideTargetMeasured(val step: HomeGuideStep, val bounds: Rect) : HomeUiIntent
 }
