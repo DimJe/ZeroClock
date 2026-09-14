@@ -1,14 +1,16 @@
 package com.dimje.zeroclock.screen.home.component
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -18,6 +20,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,8 +52,14 @@ fun HomeFabMenu(
     ) {
         AnimatedVisibility(
             visible = expanded,
-            enter = fadeIn() + scaleIn(),
-            exit = fadeOut() + scaleOut(),
+            enter = fadeIn(tween(450)) + expandVertically(
+                animationSpec = tween(450),
+                expandFrom = Alignment.Bottom,
+            ),
+            exit = shrinkVertically(
+                animationSpec = tween(450),
+                shrinkTowards = Alignment.Bottom,
+            ),
         ) {
             Column(
                 horizontalAlignment = Alignment.End,
@@ -93,18 +102,29 @@ fun HomeFabMenu(
         }
 
         FloatingActionButton(
-            modifier = Modifier.onGloballyPositioned {
+            modifier = Modifier.border(
+                width = 1.5.dp,
+                color = Color(0xFFB9C8FF),
+                shape = FloatingActionButtonDefaults.shape,
+            ).onGloballyPositioned {
                 if (guideStep == HomeGuideStep.MENU) {
                     onIntent(HomeUiIntent.GuideTargetMeasured(guideStep, it.boundsInRoot()))
                 }
             },
             onClick = { onIntent(HomeUiIntent.ToggleMenu) },
-            containerColor = Color(0xFFB9C8FF),
-            contentColor = Color(0xFF0A1733),
+            containerColor = Color.Transparent,
+            contentColor = Color(0xFFB9C8FF),
+            elevation = FloatingActionButtonDefaults.elevation(
+                defaultElevation = 0.dp,
+                pressedElevation = 0.dp,
+                focusedElevation = 0.dp,
+                hoveredElevation = 0.dp,
+            ),
         ) {
             Icon(
                 imageVector = if (expanded) Icons.Default.Close else Icons.Default.Add,
                 contentDescription = if (expanded) "메뉴 닫기" else "메뉴 열기",
+                modifier = Modifier.size(32.dp),
             )
         }
     }
