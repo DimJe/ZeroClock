@@ -17,3 +17,6 @@ local.properties
 
 # Supabase 로컬 함수와 환경 설정은 원격 저장소에 포함하지 않습니다.
 /supabase/
+
+# Firebase 환경 설정은 CI Secret으로 전달합니다.
+google-services.json

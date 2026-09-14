@@ -37,6 +37,16 @@ jobs:
       - name: Gradle Wrapper 실행 권한 설정
         run: chmod +x gradlew
 
+      - name: Firebase 설정 복원
+        env:
+          FIREBASE_GOOGLE_SERVICES_JSON: ${{ secrets.FIREBASE_GOOGLE_SERVICES_JSON }}
+        run: |
+          if [ -z "$FIREBASE_GOOGLE_SERVICES_JSON" ]; then
+            echo "::error::FIREBASE_GOOGLE_SERVICES_JSON Secret에 google-services.json 내용을 등록해 주세요."
+            exit 1
+          fi
+          printf '%s' "$FIREBASE_GOOGLE_SERVICES_JSON" > app/google-services.json
+
       - name: 단위 테스트 실행
         run: ./gradlew test --stacktrace
 

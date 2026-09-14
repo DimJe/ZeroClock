@@ -1,9 +1,16 @@
+import com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension
+
 plugins {
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.crashlytics)
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt.plugin)
     alias(libs.plugins.ksp)
 }
+
+// 검증할 때만 릴리스 APK에 디버그 서명을 사용하며 운영 오류 수집은 끕니다.
+val releaseVerification = providers.gradleProperty("releaseVerification").orNull == "true"
 
 android {
     namespace = "com.dimje.zeroclock"
@@ -20,8 +27,19 @@ android {
     }
 
     buildTypes {
+        debug {
+            manifestPlaceholders["crashlyticsCollectionEnabled"] = "false"
+        }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            manifestPlaceholders["crashlyticsCollectionEnabled"] = (!releaseVerification).toString()
+            configure<CrashlyticsExtension> {
+                mappingFileUploadEnabled = !releaseVerification
+            }
+            if (releaseVerification) {
+                signingConfig = signingConfigs.getByName("debug")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -39,10 +57,13 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
 dependencies {
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.crashlytics)
 
     implementation(project(":domain"))
     implementation(project(":data"))
@@ -61,6 +82,8 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.room.runtime)
+    androidTestImplementation(libs.retrofit.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
