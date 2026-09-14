@@ -3,6 +3,8 @@ package com.dimje.zeroclock.screen.home
 import com.dimje.domain.usecase.CompleteOnboardingUseCase
 import com.dimje.domain.usecase.GetOnboardingCompletedUseCase
 import com.dimje.domain.usecase.ObserveWorriesUseCase
+import com.dimje.domain.usecase.ConsumeReminderPermissionRequestUseCase
+import com.dimje.zeroclock.testing.FakeReminderRepository
 import com.dimje.zeroclock.testing.FakeDateProvider
 import com.dimje.zeroclock.testing.FakeOnboardingRepository
 import com.dimje.zeroclock.testing.FakeWorryRepository
@@ -19,17 +21,19 @@ import org.junit.Test
 class HomeOnboardingTest {
     @get:Rule val mainDispatcherRule = MainDispatcherRule()
 
-    private fun viewModel(repository: FakeOnboardingRepository) = HomeViewModel(
+    private fun viewModel(repository: FakeOnboardingRepository, reminder: FakeReminderRepository = FakeReminderRepository()) = HomeViewModel(
         ObserveWorriesUseCase(FakeWorryRepository()),
         FakeDateProvider(LocalDate.of(2026, 9, 13)),
         GetOnboardingCompletedUseCase(repository),
         CompleteOnboardingUseCase(repository),
+        ConsumeReminderPermissionRequestUseCase(reminder),
     )
 
     @Test
     fun `첫 실행 안내는 별빛까지 다섯 단계를 거쳐 완료되고 다시 표시되지 않는다`() = runTest {
         val repository = FakeOnboardingRepository(completed = false)
-        val vm = viewModel(repository)
+        val reminder = FakeReminderRepository()
+        val vm = viewModel(repository, reminder)
         advanceUntilIdle()
         assertEquals(HomeGuideStep.MENU, vm.uiState.value.guideStep)
         for (step in HomeGuideStep.entries.drop(1)) {
@@ -43,9 +47,12 @@ class HomeOnboardingTest {
         assertNull(vm.uiState.value.guideStep)
         assertFalse(vm.uiState.value.isMenuExpanded)
         assertTrue(repository.completed)
-        val reopened = viewModel(repository)
+        assertTrue(vm.uiState.value.showReminderPermissionInfo)
+        vm.onIntent(HomeUiIntent.DismissReminderPermissionInfo)
+        val reopened = viewModel(repository, reminder)
         advanceUntilIdle()
         assertNull(reopened.uiState.value.guideStep)
+        assertFalse(reopened.uiState.value.showReminderPermissionInfo)
     }
 
     @Test
