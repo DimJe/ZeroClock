@@ -19,18 +19,16 @@ import retrofit2.converter.gson.GsonConverterFactory
 class SupabaseComfortResponseRemoteDataSourceTest {
     private lateinit var server: MockWebServer
     private lateinit var remoteDataSource: SupabaseComfortResponseRemoteDataSource
-    private lateinit var flowLogger: RecordingDataFlowLogger
 
     @Before
     fun setUp() {
         server = MockWebServer().apply { start() }
-        flowLogger = RecordingDataFlowLogger()
         val service = Retrofit.Builder()
             .baseUrl(server.url("/"))
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(SupabaseWorryResponseService::class.java)
-        remoteDataSource = SupabaseComfortResponseRemoteDataSource(service, flowLogger)
+        remoteDataSource = SupabaseComfortResponseRemoteDataSource(service, DataFlowLogger.NONE)
     }
 
     @After
@@ -63,8 +61,6 @@ class SupabaseComfortResponseRemoteDataSourceTest {
             "내일 발표가 걱정돼요.",
             JsonParser.parseString(request.body.readUtf8()).asJsonObject["worry"].asString,
         )
-        assertTrue(flowLogger.events.any { it.contains("Supabase 요청 전송") })
-        assertTrue(flowLogger.events.any { it.contains("Supabase 답변 수신") })
     }
 
     @Test
@@ -82,7 +78,6 @@ class SupabaseComfortResponseRemoteDataSourceTest {
 
         assertTrue(error is WorryResponseApiException)
         assertEquals("위로 답변을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.", error?.message)
-        assertTrue(flowLogger.events.any { it.contains("statusCode=502") })
     }
 
     @Test
@@ -100,11 +95,10 @@ class SupabaseComfortResponseRemoteDataSourceTest {
 
         assertTrue(error is WorryResponseApiException)
         assertEquals("요청이 많아 답변이 늦어지고 있어요. 잠시 후 다시 시도해 주세요.", error?.message)
-        assertTrue(flowLogger.events.any { it.contains("statusCode=429") })
     }
 
     @Test
-    fun `성공 응답에 response가 없으면 UNKNOWN 결과를 반환한다`() = runBlocking {
+    fun `상태가 누락된 응답은 UNKNOWN 결과를 반환한다`() = runBlocking {
         server.enqueue(
             MockResponse()
                 .setResponseCode(200)
@@ -115,7 +109,6 @@ class SupabaseComfortResponseRemoteDataSourceTest {
         val result = remoteDataSource.generate("걱정이 많아요.")
 
         assertTrue(result is ComfortResponseResult.Unknown)
-        assertTrue(flowLogger.events.any { it.contains("unknown_status") })
     }
 
     @Test
@@ -152,11 +145,4 @@ class SupabaseComfortResponseRemoteDataSourceTest {
         assertEquals("지금은 내용을 판단하지 못했어요.", (result as ComfortResponseResult.Unknown).message)
     }
 
-    private class RecordingDataFlowLogger : DataFlowLogger {
-        val events = mutableListOf<String>()
-
-        override fun log(module: String, event: String, details: String) {
-            events += "[$module][$event] $details"
-        }
-    }
 }

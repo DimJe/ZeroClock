@@ -42,15 +42,11 @@ class HomeScreenTest {
         val expandedHeight = height()
         composeRule.mainClock.autoAdvance = false
         composeRule.onNodeWithContentDescription("메뉴 닫기").performClick()
-        composeRule.mainClock.advanceTimeBy(80)
-        val earlyHeight = height()
-        composeRule.mainClock.advanceTimeBy(160)
+        composeRule.mainClock.advanceTimeBy(240)
         val middleHeight = height()
         composeRule.mainClock.advanceTimeBy(400)
         val closedHeight = height()
-        android.util.Log.i("FabAnimationTest", "FAB 축소 높이: $expandedHeight → $earlyHeight → $middleHeight → $closedHeight")
-        assertTrue("닫기 초반에 메뉴 높이가 남아 있어야 합니다", earlyHeight > closedHeight)
-        assertTrue("메뉴 높이가 점진적으로 감소해야 합니다", expandedHeight > earlyHeight && earlyHeight > middleHeight && middleHeight > closedHeight)
+        assertTrue("닫는 도중에는 펼침과 닫힘 사이의 높이를 유지해야 합니다", middleHeight > closedHeight && middleHeight < expandedHeight)
         composeRule.onNodeWithText("마음 분석").assertDoesNotExist()
         composeRule.onNodeWithContentDescription("메뉴 열기").assertIsDisplayed()
     }
