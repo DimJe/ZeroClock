@@ -3,8 +3,6 @@ package com.dimje.zeroclock.screen.home
 import com.dimje.domain.usecase.CompleteOnboardingUseCase
 import com.dimje.domain.usecase.GetOnboardingCompletedUseCase
 import com.dimje.domain.usecase.ObserveWorriesUseCase
-import com.dimje.domain.usecase.ConsumeReminderPermissionRequestUseCase
-import com.dimje.zeroclock.testing.FakeReminderRepository
 import com.dimje.zeroclock.testing.FakeDateProvider
 import com.dimje.zeroclock.testing.FakeOnboardingRepository
 import com.dimje.zeroclock.testing.FakeWorryRepository
@@ -21,19 +19,18 @@ import org.junit.Test
 class HomeOnboardingTest {
     @get:Rule val mainDispatcherRule = MainDispatcherRule()
 
-    private fun viewModel(repository: FakeOnboardingRepository, reminder: FakeReminderRepository = FakeReminderRepository()) = HomeViewModel(
+    private fun viewModel(repository: FakeOnboardingRepository) = HomeViewModel(
         ObserveWorriesUseCase(FakeWorryRepository()),
         FakeDateProvider(LocalDate.of(2026, 9, 13)),
         GetOnboardingCompletedUseCase(repository),
         CompleteOnboardingUseCase(repository),
-        ConsumeReminderPermissionRequestUseCase(reminder),
     )
 
     @Test
     fun `첫 실행 안내는 별빛까지 다섯 단계를 거쳐 완료되고 다시 표시되지 않는다`() = runTest {
         val repository = FakeOnboardingRepository(completed = false)
-        val reminder = FakeReminderRepository()
-        val vm = viewModel(repository, reminder)
+        val vm = viewModel(repository)
+        vm.onIntent(HomeUiIntent.NotificationStatusChanged(canNotify = false, canRequestRuntimePermission = true))
         advanceUntilIdle()
         assertEquals(HomeGuideStep.MENU, vm.uiState.value.guideStep)
         for (step in HomeGuideStep.entries.drop(1)) {
@@ -47,12 +44,25 @@ class HomeOnboardingTest {
         assertNull(vm.uiState.value.guideStep)
         assertFalse(vm.uiState.value.isMenuExpanded)
         assertTrue(repository.completed)
-        assertTrue(vm.uiState.value.showReminderPermissionInfo)
+        assertEquals(ReminderPermissionAction.REQUEST, vm.uiState.value.reminderPermissionAction)
         vm.onIntent(HomeUiIntent.DismissReminderPermissionInfo)
-        val reopened = viewModel(repository, reminder)
+        val reopened = viewModel(repository)
+        reopened.onIntent(HomeUiIntent.NotificationStatusChanged(canNotify = false, canRequestRuntimePermission = true))
         advanceUntilIdle()
         assertNull(reopened.uiState.value.guideStep)
-        assertFalse(reopened.uiState.value.showReminderPermissionInfo)
+        assertEquals(ReminderPermissionAction.REQUEST, reopened.uiState.value.reminderPermissionAction)
+    }
+
+    @Test
+    fun `권한 거절 뒤에는 앱 알림 설정 안내로 전환한다`() = runTest {
+        val vm = viewModel(FakeOnboardingRepository(completed = true))
+        advanceUntilIdle()
+        vm.onIntent(HomeUiIntent.NotificationStatusChanged(canNotify = false, canRequestRuntimePermission = true))
+        assertEquals(ReminderPermissionAction.REQUEST, vm.uiState.value.reminderPermissionAction)
+
+        vm.onIntent(HomeUiIntent.NotificationPermissionResult(granted = false))
+
+        assertEquals(ReminderPermissionAction.SETTINGS, vm.uiState.value.reminderPermissionAction)
     }
 
     @Test

@@ -6,7 +6,6 @@ import com.dimje.domain.repository.WorryRepository
 import com.dimje.domain.repository.OnboardingRepository
 import com.dimje.domain.repository.ReminderRepository
 import com.dimje.domain.usecase.ScheduleReminderUseCase
-import com.dimje.domain.usecase.ConsumeReminderPermissionRequestUseCase
 import com.dimje.domain.usecase.ClaimReminderNotificationUseCase
 import com.dimje.domain.usecase.GetOnboardingCompletedUseCase
 import com.dimje.domain.usecase.CompleteOnboardingUseCase
@@ -24,10 +23,6 @@ import dagger.hilt.components.SingletonComponent
 object UseCaseModule {
     @Provides
     fun provideScheduleReminderUseCase(repository: ReminderRepository) = ScheduleReminderUseCase(repository)
-
-    @Provides
-    fun provideConsumeReminderPermissionRequestUseCase(repository: ReminderRepository) =
-        ConsumeReminderPermissionRequestUseCase(repository)
 
     @Provides
     fun provideClaimReminderNotificationUseCase(

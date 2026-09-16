@@ -1,11 +1,16 @@
 package com.dimje.zeroclock.screen.home
 
 import android.Manifest
+import android.app.NotificationManager
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.compose.ui.platform.LocalContext
 
 import androidx.compose.foundation.layout.Box
@@ -33,6 +38,7 @@ import com.dimje.zeroclock.screen.home.component.HomeErrorContent
 import com.dimje.zeroclock.screen.home.component.HomeFabMenu
 import com.dimje.zeroclock.screen.home.component.HomeGuideOverlay
 import com.dimje.zeroclock.screen.home.component.ReminderPermissionInfoDialog
+import com.dimje.zeroclock.reminder.ReminderNotifier
 import com.dimje.zeroclock.ui.theme.ZeroClockTheme
 import com.dimje.zeroclock.util.OnResumeEffect
 
@@ -43,17 +49,20 @@ fun HomeRoute(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
-    val needsNotificationPermission = Build.VERSION.SDK_INT >= 33 &&
-        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-
-    LaunchedEffect(state.showReminderPermissionInfo) {
-        if (state.showReminderPermissionInfo && !needsNotificationPermission) {
-            viewModel.onIntent(HomeUiIntent.DismissReminderPermissionInfo)
-        }
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        viewModel.onIntent(HomeUiIntent.NotificationPermissionResult(granted))
     }
 
-    OnResumeEffect { viewModel.onIntent(HomeUiIntent.AppResumed) }
+    OnResumeEffect {
+        viewModel.onIntent(HomeUiIntent.AppResumed)
+        val access = context.reminderNotificationAccess()
+        viewModel.onIntent(
+            HomeUiIntent.NotificationStatusChanged(
+                canNotify = access.canNotify,
+                canRequestRuntimePermission = access.canRequestRuntimePermission,
+            ),
+        )
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.effect.collect { effect ->
@@ -62,17 +71,41 @@ fun HomeRoute(
                 HomeUiEffect.RequestNotificationPermission -> if (Build.VERSION.SDK_INT >= 33 &&
                     ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
                 ) permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                HomeUiEffect.OpenNotificationSettings -> context.startActivity(
+                    Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                        .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName),
+                )
             }
         }
     }
 
     HomeScreen(state = state, onIntent = viewModel::onIntent)
-    if (state.showReminderPermissionInfo && needsNotificationPermission) {
+    state.reminderPermissionAction?.let { action ->
         ReminderPermissionInfoDialog(
+            action = action,
             onConfirm = { viewModel.onIntent(HomeUiIntent.ConfirmReminderPermission) },
             onDismiss = { viewModel.onIntent(HomeUiIntent.DismissReminderPermissionInfo) },
         )
     }
+}
+
+private data class ReminderNotificationAccess(
+    val canNotify: Boolean,
+    val canRequestRuntimePermission: Boolean,
+)
+
+private fun Context.reminderNotificationAccess(): ReminderNotificationAccess {
+    val runtimePermissionMissing = Build.VERSION.SDK_INT >= 33 &&
+        ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+    val channelEnabled = if (Build.VERSION.SDK_INT >= 26) {
+        getSystemService(NotificationManager::class.java)
+            .getNotificationChannel(ReminderNotifier.CHANNEL_ID)
+            ?.importance != NotificationManager.IMPORTANCE_NONE
+    } else true
+    return ReminderNotificationAccess(
+        canNotify = !runtimePermissionMissing && NotificationManagerCompat.from(this).areNotificationsEnabled() && channelEnabled,
+        canRequestRuntimePermission = runtimePermissionMissing,
+    )
 }
 
 @Composable

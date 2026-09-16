@@ -3,8 +3,6 @@ package com.dimje.zeroclock.screen.home
 import com.dimje.domain.usecase.ObserveWorriesUseCase
 import com.dimje.domain.usecase.GetOnboardingCompletedUseCase
 import com.dimje.domain.usecase.CompleteOnboardingUseCase
-import com.dimje.domain.usecase.ConsumeReminderPermissionRequestUseCase
-import com.dimje.zeroclock.testing.FakeReminderRepository
 import com.dimje.zeroclock.testing.FakeOnboardingRepository
 import com.dimje.zeroclock.testing.FakeDateProvider
 import com.dimje.zeroclock.testing.FakeWorryRepository
@@ -33,7 +31,6 @@ class HomeViewModelTest {
             dateProvider = dateProvider,
             getOnboardingCompleted = GetOnboardingCompletedUseCase(FakeOnboardingRepository()),
             completeOnboarding = CompleteOnboardingUseCase(FakeOnboardingRepository()),
-            consumeReminderPermissionRequest = ConsumeReminderPermissionRequestUseCase(FakeReminderRepository()),
         )
 
         advanceUntilIdle()
@@ -53,7 +50,6 @@ class HomeViewModelTest {
         val viewModel = HomeViewModel(
             ObserveWorriesUseCase(repository), dateProvider,
             GetOnboardingCompletedUseCase(settings), CompleteOnboardingUseCase(settings),
-            ConsumeReminderPermissionRequestUseCase(FakeReminderRepository()),
         )
 
         advanceUntilIdle()
@@ -79,7 +75,6 @@ class HomeViewModelTest {
             dateProvider = FakeDateProvider(date),
             getOnboardingCompleted = GetOnboardingCompletedUseCase(FakeOnboardingRepository()),
             completeOnboarding = CompleteOnboardingUseCase(FakeOnboardingRepository()),
-            consumeReminderPermissionRequest = ConsumeReminderPermissionRequestUseCase(FakeReminderRepository()),
         )
 
         advanceUntilIdle()

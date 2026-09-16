@@ -5,4 +5,5 @@ import com.dimje.zeroclock.base.BaseUiEffect
 sealed interface HomeUiEffect : BaseUiEffect {
     data class Navigate(val route: String) : HomeUiEffect
     data object RequestNotificationPermission : HomeUiEffect
+    data object OpenNotificationSettings : HomeUiEffect
 }

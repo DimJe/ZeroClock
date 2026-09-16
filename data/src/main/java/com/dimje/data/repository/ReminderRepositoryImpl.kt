@@ -12,6 +12,5 @@ class ReminderRepositoryImpl @Inject constructor(
     private val alarmDataSource: AlarmManagerReminderDataSource,
 ) : ReminderRepository {
     override fun scheduleAt(triggerAt: Instant) = alarmDataSource.scheduleAt(triggerAt)
-    override suspend fun consumePermissionRequest(): Boolean = localDataSource.consumePermissionRequest()
     override suspend fun claimNotificationDate(date: LocalDate): Boolean = localDataSource.claimNotificationDate(date)
 }

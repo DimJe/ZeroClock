@@ -12,5 +12,10 @@ sealed interface HomeUiIntent : BaseUiIntent {
     data object SkipGuide : HomeUiIntent
     data object ConfirmReminderPermission : HomeUiIntent
     data object DismissReminderPermissionInfo : HomeUiIntent
+    data class NotificationStatusChanged(
+        val canNotify: Boolean,
+        val canRequestRuntimePermission: Boolean,
+    ) : HomeUiIntent
+    data class NotificationPermissionResult(val granted: Boolean) : HomeUiIntent
     data class GuideTargetMeasured(val step: HomeGuideStep, val bounds: Rect) : HomeUiIntent
 }
