@@ -12,10 +12,19 @@ class FakeWorryRepository(
 ) : WorryRepository {
     private val entries = MutableStateFlow(initialEntries)
 
+    var failGetByDateFor: LocalDate? = null
+    var getByDateCalls: Int = 0
+        private set
+    var saveCalls: Int = 0
+        private set
+
     override fun observeAll(): Flow<List<WorryEntry>> = entries
 
-    override suspend fun getByDate(date: LocalDate): WorryEntry? =
-        entries.value.firstOrNull { it.date == date }
+    override suspend fun getByDate(date: LocalDate): WorryEntry? {
+        getByDateCalls++
+        if (date == failGetByDateFor) error("테스트 조회 실패: $date")
+        return entries.value.firstOrNull { it.date == date }
+    }
 
     override suspend fun save(
         worry: String,
@@ -23,6 +32,7 @@ class FakeWorryRepository(
         date: LocalDate,
         riskLevel: WorryRiskLevel,
     ): WorryEntry {
+        saveCalls++
         val entry = WorryEntry(
             id = (entries.value.maxOfOrNull { it.id } ?: 0L) + 1L,
             worry = worry,

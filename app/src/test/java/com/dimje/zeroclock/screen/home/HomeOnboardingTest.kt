@@ -111,10 +111,14 @@ class HomeOnboardingTest {
     }
 
     @Test
-    fun `설정 읽기 실패는 기록 화면 사용을 막지 않는다`() = runTest {
+    fun `설정 읽기 실패는 온보딩 안내나 오류 피드백으로 사용자에게 알려야 한다`() = runTest {
         val vm = viewModel(FakeOnboardingRepository(failReading = true))
         advanceUntilIdle()
         assertFalse(vm.uiState.value.isLoading)
-        assertNull(vm.uiState.value.guideStep)
+        assertTrue(
+            vm.uiState.value.guideStep != null ||
+                vm.uiState.value.errorMessage != null ||
+                vm.uiState.value.guideError != null,
+        )
     }
 }

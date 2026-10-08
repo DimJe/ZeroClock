@@ -5,11 +5,17 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.onNodeWithTag
 import com.dimje.zeroclock.screen.home.component.HomeFabMenu
@@ -133,5 +139,30 @@ class HomeScreenTest {
         composeRule.onNodeWithText("다시 시도").performClick()
 
         assertEquals(listOf(HomeUiIntent.Retry), intents)
+    }
+
+    @Test
+    fun 글꼴이_커도_온보딩_버튼에_스크롤해_접근할_수_있다() {
+        val intents = mutableListOf<HomeUiIntent>()
+        composeRule.setContent {
+            val currentDensity = LocalDensity.current
+            CompositionLocalProvider(
+                LocalDensity provides Density(currentDensity.density, fontScale = 2f),
+            ) {
+                ZeroClockTheme {
+                    Box(Modifier.size(width = 360.dp, height = 640.dp)) {
+                        HomeScreen(
+                            state = HomeUiState(isLoading = false, guideStep = HomeGuideStep.MENU),
+                            onIntent = intents::add,
+                        )
+                    }
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("다음").performScrollTo().assertIsDisplayed().performClick()
+        composeRule.onNodeWithText("건너뛰기").performScrollTo().assertIsDisplayed().performClick()
+
+        assertEquals(listOf(HomeUiIntent.NextGuide, HomeUiIntent.SkipGuide), intents.filterNot { it is HomeUiIntent.GuideTargetMeasured })
     }
 }

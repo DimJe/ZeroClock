@@ -6,14 +6,18 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.unit.dp
 import com.dimje.domain.model.WorryEntry
 import com.dimje.domain.model.WorryRiskLevel
 import com.dimje.zeroclock.ui.theme.ZeroClockTheme
+import com.dimje.zeroclock.screen.history.component.CalendarCard
 import java.time.LocalDate
 import java.time.YearMonth
 import org.junit.Rule
 import org.junit.Test
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 
 class HistoryScreenTest {
     @get:Rule
@@ -112,5 +116,46 @@ class HistoryScreenTest {
 
         composeRule.onNodeWithContentDescription("3일, 이전 마음 기록")
             .assertIsDisplayed()
+    }
+
+    @Test
+    fun 작은_화면에서도_달력_날짜의_터치_영역은_48dp_이상이다() {
+        val date = LocalDate.of(2026, 9, 2)
+        composeRule.setContent {
+            ZeroClockTheme {
+                CalendarCard(
+                    visibleMonth = YearMonth.from(date),
+                    selectedDate = null,
+                    entries = emptyList(),
+                    onPreviousMonth = {},
+                    onNextMonth = {},
+                    onDateSelected = {},
+                    modifier = androidx.compose.ui.Modifier.width(320.dp),
+                )
+            }
+        }
+
+        val dayBounds = composeRule.onNodeWithContentDescription("2일, 기록 없음")
+            .fetchSemanticsNode().boundsInRoot
+        assertTrue("날짜 터치 영역이 48dp보다 작습니다", dayBounds.width >= 48f * composeRule.density.density)
+        assertTrue("날짜 터치 영역이 48dp보다 작습니다", dayBounds.height >= 48f * composeRule.density.density)
+    }
+
+    @Test
+    fun 날짜를_누르면_선택_의도가_전달된다() {
+        val date = LocalDate.of(2026, 9, 2)
+        val intents = mutableListOf<HistoryUiIntent>()
+        composeRule.setContent {
+            ZeroClockTheme {
+                HistoryScreen(
+                    state = HistoryUiState(isLoading = false, visibleMonth = YearMonth.from(date)),
+                    onIntent = intents::add,
+                )
+            }
+        }
+
+        composeRule.onNodeWithContentDescription("2일, 기록 없음").performClick()
+
+        assertEquals(listOf(HistoryUiIntent.SelectDate(date)), intents)
     }
 }

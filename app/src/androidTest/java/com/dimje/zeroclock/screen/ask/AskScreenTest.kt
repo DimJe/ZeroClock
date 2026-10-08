@@ -2,16 +2,23 @@ package com.dimje.zeroclock.screen.ask
 
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performClick
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.dimje.domain.model.WorryEntry
 import com.dimje.domain.model.WorryRiskLevel
 import com.dimje.zeroclock.ui.theme.ZeroClockTheme
 import java.time.LocalDate
 import org.junit.Rule
 import org.junit.Test
+import org.junit.Assert.assertEquals
 
 class AskScreenTest {
     @get:Rule
@@ -78,6 +85,25 @@ class AskScreenTest {
     }
 
     @Test
+    fun 기록_조회_오류가_있으면_제출을_막고_오류를_표시한다() {
+        composeRule.setContent {
+            ZeroClockTheme {
+                AskScreen(
+                    state = AskUiState(
+                        isLoading = false,
+                        worry = "작성한 고민",
+                        errorMessage = "오늘의 기록을 확인하지 못했어요.",
+                    ),
+                    onIntent = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("오늘의 기록을 확인하지 못했어요.").assertIsDisplayed()
+        composeRule.onNodeWithText("마음 내려놓기").assertIsNotEnabled()
+    }
+
+    @Test
     fun 위기_답변이면_상담과_긴급전화_버튼을_표시한다() {
         val date = LocalDate.of(2026, 9, 2)
         composeRule.setContent {
@@ -103,5 +129,24 @@ class AskScreenTest {
         composeRule.onNodeWithText("자살예방 상담 109").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("경찰 112").performScrollTo().assertIsDisplayed()
         composeRule.onNodeWithText("구급 119").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun 짧은_화면에서도_스크롤해_제출_버튼에_접근할_수_있다() {
+        val intents = mutableListOf<AskUiIntent>()
+        composeRule.setContent {
+            ZeroClockTheme {
+                Box(Modifier.size(width = 360.dp, height = 320.dp)) {
+                    AskScreen(
+                        state = AskUiState(isLoading = false, worry = "작성한 고민"),
+                        onIntent = intents::add,
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("마음 내려놓기").performScrollTo().assertIsDisplayed().performClick()
+
+        assertEquals(listOf(AskUiIntent.Submit), intents)
     }
 }

@@ -67,6 +67,53 @@ class AskViewModelTest {
     }
 
     @Test
+    fun `기록 조회 실패 후에는 제출할 수 없고 다시 제출해도 저장을 시도하지 않는다`() = runTest {
+        val date = LocalDate.of(2026, 9, 2)
+        val repository = FakeWorryRepository().apply { failGetByDateFor = date }
+        val viewModel = AskViewModel(
+            getWorryByDate = GetWorryByDateUseCase(repository),
+            submitWorry = SubmitWorryUseCase(repository, FakeComfortResponseRepository()),
+            flowLogger = DataFlowLogger.NONE,
+            dateProvider = FakeDateProvider(date),
+        )
+        advanceUntilIdle()
+        val lookupsAfterInitialFailure = repository.getByDateCalls
+
+        viewModel.onIntent(AskUiIntent.WorryChanged("오늘의 고민"))
+        assertFalse(viewModel.uiState.value.canSubmit)
+        viewModel.onIntent(AskUiIntent.Submit)
+        advanceUntilIdle()
+
+        assertEquals(lookupsAfterInitialFailure, repository.getByDateCalls)
+        assertEquals(0, repository.saveCalls)
+    }
+
+    @Test
+    fun `날짜 변경 후 새 기록 조회가 실패하면 전날 기록을 지운다`() = runTest {
+        val firstDate = LocalDate.of(2026, 9, 1)
+        val nextDate = firstDate.plusDays(1)
+        val dateProvider = FakeDateProvider(firstDate)
+        val repository = FakeWorryRepository(listOf(worryEntry(1, firstDate))).apply {
+            failGetByDateFor = nextDate
+        }
+        val viewModel = AskViewModel(
+            getWorryByDate = GetWorryByDateUseCase(repository),
+            submitWorry = SubmitWorryUseCase(repository, FakeComfortResponseRepository()),
+            flowLogger = DataFlowLogger.NONE,
+            dateProvider = dateProvider,
+        )
+        advanceUntilIdle()
+        assertEquals(firstDate, viewModel.uiState.value.savedEntry?.date)
+
+        dateProvider.moveTo(nextDate)
+        advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.savedEntry)
+        assertEquals("", viewModel.uiState.value.worry)
+        assertTrue(viewModel.uiState.value.errorMessage?.contains("조회 실패") == true)
+    }
+
+    @Test
     fun `유효하지 않은 입력은 저장하지 않고 입력과 알림을 유지한다`() = runTest {
         val date = LocalDate.of(2026, 9, 2)
         val repository = FakeWorryRepository()
