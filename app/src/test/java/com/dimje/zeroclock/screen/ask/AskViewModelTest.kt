@@ -67,7 +67,7 @@ class AskViewModelTest {
     }
 
     @Test
-    fun `기록 조회 실패 후에는 제출할 수 없고 다시 제출해도 저장을 시도하지 않는다`() = runTest {
+    fun `기록 조회 실패 후 제출하면 날짜를 다시 확인하고 실패를 알린다`() = runTest {
         val date = LocalDate.of(2026, 9, 2)
         val repository = FakeWorryRepository().apply { failGetByDateFor = date }
         val viewModel = AskViewModel(
@@ -80,12 +80,15 @@ class AskViewModelTest {
         val lookupsAfterInitialFailure = repository.getByDateCalls
 
         viewModel.onIntent(AskUiIntent.WorryChanged("오늘의 고민"))
-        assertFalse(viewModel.uiState.value.canSubmit)
+        assertTrue(viewModel.uiState.value.canSubmit)
         viewModel.onIntent(AskUiIntent.Submit)
         advanceUntilIdle()
 
-        assertEquals(lookupsAfterInitialFailure, repository.getByDateCalls)
+        assertEquals(lookupsAfterInitialFailure + 1, repository.getByDateCalls)
         assertEquals(0, repository.saveCalls)
+        assertNull(viewModel.uiState.value.savedEntry)
+        assertFalse(viewModel.uiState.value.isSubmitting)
+        assertTrue(viewModel.uiState.value.alert?.message?.contains("테스트 조회 실패") == true)
     }
 
     @Test

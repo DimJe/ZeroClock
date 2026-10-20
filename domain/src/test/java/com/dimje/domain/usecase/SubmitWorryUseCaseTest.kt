@@ -16,9 +16,10 @@ import org.junit.Test
 
 class SubmitWorryUseCaseTest {
     @Test
-    fun `같은 날짜에 두 번 제출하면 두 번째 요청을 거부한다`() = runBlocking {
+    fun `같은 날짜의 두 번째 제출은 AI 요청 전에 거부한다`() = runBlocking {
         val repository = InMemoryWorryRepository()
-        val useCase = SubmitWorryUseCase(repository, FixedComfortResponseRepository())
+        val responseRepository = FixedComfortResponseRepository()
+        val useCase = SubmitWorryUseCase(repository, responseRepository)
         val date = LocalDate.of(2026, 9, 2)
 
         useCase("첫 번째 고민", date)
@@ -27,6 +28,7 @@ class SubmitWorryUseCaseTest {
             runBlocking { useCase("두 번째 고민", date) }
         }
         assertEquals(1, repository.entries.value.size)
+        assertEquals(1, responseRepository.generateCalls)
     }
 
     @Test
@@ -56,11 +58,17 @@ class SubmitWorryUseCaseTest {
 }
 
 private class FixedComfortResponseRepository : ComfortResponseRepository {
-    override suspend fun generate(worry: String): ComfortResponseResult = ComfortResponseResult.Success(
-        response = "따뜻한 답변",
-        riskLevel = WorryRiskLevel.NORMAL,
-        isGenerated = true,
-    )
+    var generateCalls = 0
+        private set
+
+    override suspend fun generate(worry: String): ComfortResponseResult {
+        generateCalls++
+        return ComfortResponseResult.Success(
+            response = "따뜻한 답변",
+            riskLevel = WorryRiskLevel.NORMAL,
+            isGenerated = true,
+        )
+    }
 }
 
 private class InvalidComfortResponseRepository : ComfortResponseRepository {
