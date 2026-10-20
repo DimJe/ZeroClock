@@ -38,12 +38,7 @@ fun CalendarDay(
     Box(
         modifier = modifier
             .aspectRatio(1f)
-            .padding(3.dp)
             .clip(CircleShape)
-            .background(
-                color = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                shape = CircleShape,
-            )
             .semantics {
                 if (date != null) {
                     contentDescription = if (hasEntry) {
@@ -53,7 +48,12 @@ fun CalendarDay(
                     }
                 }
             }
-            .clickable(enabled = date != null, onClick = onClick),
+            .clickable(enabled = date != null, onClick = onClick)
+            .padding(3.dp)
+            .background(
+                color = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                shape = CircleShape,
+            ),
         contentAlignment = Alignment.Center,
     ) {
         date?.let {

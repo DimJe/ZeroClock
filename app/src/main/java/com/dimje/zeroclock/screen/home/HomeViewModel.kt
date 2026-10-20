@@ -37,7 +37,9 @@ class HomeViewModel @Inject constructor(
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
-                // 설정을 읽지 못해도 기존 기록 기능은 사용할 수 있도록 안내를 생략합니다.
+                // 조회 실패 시 미완료로 간주해 사용자가 안내 없이 진입하는 것을 막습니다.
+                onboardingResolved = true
+                reduce { copy(guideStep = HomeGuideStep.MENU) }
             }
         }
     }

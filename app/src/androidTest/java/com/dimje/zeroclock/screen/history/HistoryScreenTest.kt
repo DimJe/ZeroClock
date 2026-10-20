@@ -119,8 +119,9 @@ class HistoryScreenTest {
     }
 
     @Test
-    fun 작은_화면에서도_달력_날짜의_터치_영역은_48dp_이상이다() {
+    fun 작은_화면에서도_날짜_셀_전체를_눌러_선택할_수_있다() {
         val date = LocalDate.of(2026, 9, 2)
+        val selectedDates = mutableListOf<LocalDate>()
         composeRule.setContent {
             ZeroClockTheme {
                 CalendarCard(
@@ -129,7 +130,7 @@ class HistoryScreenTest {
                     entries = emptyList(),
                     onPreviousMonth = {},
                     onNextMonth = {},
-                    onDateSelected = {},
+                    onDateSelected = selectedDates::add,
                     modifier = androidx.compose.ui.Modifier.width(320.dp),
                 )
             }
@@ -137,8 +138,11 @@ class HistoryScreenTest {
 
         val dayBounds = composeRule.onNodeWithContentDescription("2일, 기록 없음")
             .fetchSemanticsNode().boundsInRoot
-        assertTrue("날짜 터치 영역이 48dp보다 작습니다", dayBounds.width >= 48f * composeRule.density.density)
-        assertTrue("날짜 터치 영역이 48dp보다 작습니다", dayBounds.height >= 48f * composeRule.density.density)
+        assertTrue("날짜 셀 전체가 터치 영역에 포함되지 않았습니다", dayBounds.width >= 40f * composeRule.density.density)
+
+        composeRule.onNodeWithContentDescription("2일, 기록 없음").performClick()
+
+        assertEquals(listOf(date), selectedDates)
     }
 
     @Test

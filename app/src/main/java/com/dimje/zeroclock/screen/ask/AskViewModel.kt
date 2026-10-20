@@ -66,13 +66,18 @@ class AskViewModel @Inject constructor(
     }
 
     private fun loadDate(today: LocalDate, showLoading: Boolean) {
+        val dateChanged = today != currentDate
         currentDate = today
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
             flowLogger.log(APP_MODULE, "오늘의 고민 조회 시작", "date=$today")
             reduce {
-                if (showLoading) copy(isLoading = true, errorMessage = null)
-                else copy(errorMessage = null)
+                copy(
+                    isLoading = showLoading,
+                    savedEntry = if (dateChanged) null else savedEntry,
+                    worry = if (dateChanged) "" else worry,
+                    errorMessage = null,
+                )
             }
             runCatching { getWorryByDate(today) }
                 .onSuccess { entry ->
