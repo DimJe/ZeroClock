@@ -2,16 +2,10 @@ package com.dimje.zeroclock.screen.ask.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.dimje.domain.model.WorryEntry
@@ -31,18 +25,8 @@ fun ComfortResponseContent(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Surface(
-            shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant,
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                WorryRiskLabel(entry.riskLevel)
-                Spacer(Modifier.height(12.dp))
-                Text("당신에게 보내는 답장", fontWeight = FontWeight.SemiBold)
-                Spacer(Modifier.height(12.dp))
-                Text(entry.response, style = MaterialTheme.typography.bodyLarge)
-            }
-        }
+        ConversationMessage(entry.response, isMine = false)
+        WorryRiskLabel(entry.riskLevel)
         if (entry.riskLevel == WorryRiskLevel.CRISIS) {
             CrisisSupportCard(onCall = onCall)
         }

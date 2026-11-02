@@ -1,8 +1,12 @@
 package com.dimje.zeroclock.screen.ask.component
 
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,17 +19,31 @@ import com.dimje.zeroclock.ui.theme.ZeroClockTheme
 fun WorryInputField(
     worry: String,
     enabled: Boolean,
+    canSubmit: Boolean,
     onWorryChanged: (String) -> Unit,
+    onSubmit: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     OutlinedTextField(
         value = worry,
         onValueChange = onWorryChanged,
-        modifier = modifier.fillMaxWidth().height(190.dp),
+        modifier = modifier.fillMaxWidth(),
         enabled = enabled,
-        placeholder = { Text("어떤 걱정이 마음에 머물러 있나요?") },
-        supportingText = { Text("${worry.length}/1000 · 저장 후에는 수정할 수 없어요.") },
-        shape = RoundedCornerShape(20.dp),
+        minLines = 2,
+        maxLines = 4,
+        placeholder = { Text("지금 마음을 답장으로 적어주세요") },
+        trailingIcon = {
+            IconButton(onClick = onSubmit, enabled = canSubmit) {
+                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "마음 내려놓기")
+            }
+        },
+        supportingText = {
+            Text(
+                "${worry.length}/1000 · 하루에 한 번, 보낸 뒤에는 수정할 수 없어요.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
+        shape = RoundedCornerShape(24.dp),
     )
 }
 
@@ -33,6 +51,12 @@ fun WorryInputField(
 @Composable
 private fun WorryInputFieldPreview() {
     ZeroClockTheme {
-        WorryInputField(worry = "내일 발표가 걱정돼요.", enabled = true, onWorryChanged = {})
+        WorryInputField(
+            worry = "내일 발표가 걱정돼요.",
+            enabled = true,
+            canSubmit = true,
+            onWorryChanged = {},
+            onSubmit = {},
+        )
     }
 }

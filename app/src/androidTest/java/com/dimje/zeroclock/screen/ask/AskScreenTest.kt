@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasProgressBarRangeInfo
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performClick
 import androidx.compose.foundation.layout.Box
@@ -41,7 +42,7 @@ class AskScreenTest {
         }
 
         composeRule.onNodeWithText("따뜻한 테스트 답변").assertIsDisplayed()
-        composeRule.onNodeWithText("마음 내려놓기").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("마음 내려놓기").assertDoesNotExist()
     }
 
     @Test
@@ -100,7 +101,7 @@ class AskScreenTest {
         }
 
         composeRule.onNodeWithText("오늘의 기록을 확인하지 못했어요.").assertIsDisplayed()
-        composeRule.onNodeWithText("마음 내려놓기").assertIsNotEnabled()
+        composeRule.onNodeWithContentDescription("마음 내려놓기").assertIsNotEnabled()
     }
 
     @Test
@@ -132,7 +133,7 @@ class AskScreenTest {
     }
 
     @Test
-    fun 짧은_화면에서도_스크롤해_제출_버튼에_접근할_수_있다() {
+    fun 짧은_화면에서도_답장_전송_버튼에_접근할_수_있다() {
         val intents = mutableListOf<AskUiIntent>()
         composeRule.setContent {
             ZeroClockTheme {
@@ -145,7 +146,7 @@ class AskScreenTest {
             }
         }
 
-        composeRule.onNodeWithText("마음 내려놓기").performScrollTo().assertIsDisplayed().performClick()
+        composeRule.onNodeWithContentDescription("마음 내려놓기").assertIsDisplayed().performClick()
 
         assertEquals(listOf(AskUiIntent.Submit), intents)
     }
