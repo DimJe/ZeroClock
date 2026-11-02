@@ -53,7 +53,7 @@ class HomeScreenTest {
         composeRule.mainClock.advanceTimeBy(400)
         val closedHeight = height()
         assertTrue("닫는 도중에는 펼침과 닫힘 사이의 높이를 유지해야 합니다", middleHeight > closedHeight && middleHeight < expandedHeight)
-        composeRule.onNodeWithText("마음 분석").assertDoesNotExist()
+        composeRule.onNodeWithText("들여다보기").assertDoesNotExist()
         composeRule.onNodeWithContentDescription("메뉴 열기").assertIsDisplayed()
     }
 

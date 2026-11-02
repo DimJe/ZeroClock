@@ -41,7 +41,7 @@ fun AnalysisScreen(
     onIntent: (AnalysisUiIntent) -> Unit,
 ) {
     Scaffold(
-        topBar = { ScreenTopBar(title = "마음 분석", onBack = { onIntent(AnalysisUiIntent.Back) }) },
+        topBar = { ScreenTopBar(title = "들여다보기", onBack = { onIntent(AnalysisUiIntent.Back) }) },
     ) { paddingValues ->
         when {
             state.isLoading -> ScreenLoadingContent(modifier = Modifier.padding(paddingValues))

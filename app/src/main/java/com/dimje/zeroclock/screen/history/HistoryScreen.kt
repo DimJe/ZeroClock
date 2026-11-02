@@ -57,7 +57,7 @@ fun HistoryScreen(
     onIntent: (HistoryUiIntent) -> Unit,
 ) {
     Scaffold(
-        topBar = { ScreenTopBar(title = "마음 캘린더", onBack = { onIntent(HistoryUiIntent.Back) }) },
+        topBar = { ScreenTopBar(title = "지난 얘기", onBack = { onIntent(HistoryUiIntent.Back) }) },
     ) { paddingValues ->
         when {
             state.isLoading -> ScreenLoadingContent(modifier = Modifier.padding(paddingValues))

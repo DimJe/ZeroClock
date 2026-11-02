@@ -16,7 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
@@ -32,6 +31,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.res.vectorResource
+import com.dimje.zeroclock.R
 import com.dimje.zeroclock.screen.Screen
 import com.dimje.zeroclock.screen.home.HomeUiIntent
 import com.dimje.zeroclock.screen.home.HomeGuideStep
@@ -66,8 +67,8 @@ fun HomeFabMenu(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 HomeMenuFab(
-                    if (hasTodayEntry) "오늘 기록 보기" else "마음 기록",
-                    Icons.Default.Edit,
+                    if (hasTodayEntry) "오늘 얘기 보기" else "털어놓기",
+                    ImageVector.vectorResource(R.drawable.ic_chat_bubble),
                     modifier = Modifier.onGloballyPositioned {
                         if (guideStep == HomeGuideStep.WRITE) {
                             onIntent(HomeUiIntent.GuideTargetMeasured(guideStep, it.boundsInRoot()))
@@ -77,7 +78,7 @@ fun HomeFabMenu(
                     onIntent(HomeUiIntent.SelectMenu(Screen.Write.route))
                 }
                 HomeMenuFab(
-                    "캘린더",
+                    "지난 얘기",
                     Icons.Default.DateRange,
                     modifier = Modifier.onGloballyPositioned {
                         if (guideStep == HomeGuideStep.CALENDAR) {
@@ -88,7 +89,7 @@ fun HomeFabMenu(
                     onIntent(HomeUiIntent.SelectMenu(Screen.Calendar.route))
                 }
                 HomeMenuFab(
-                    "마음 분석",
+                    "들여다보기",
                     Icons.Default.Search,
                     modifier = Modifier.onGloballyPositioned {
                         if (guideStep == HomeGuideStep.ANALYSIS) {

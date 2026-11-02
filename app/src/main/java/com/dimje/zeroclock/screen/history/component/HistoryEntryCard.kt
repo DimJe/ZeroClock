@@ -50,10 +50,10 @@ fun HistoryEntryCard(
             } else {
                 WorryRiskLabel(entry.riskLevel)
                 Spacer(Modifier.height(12.dp))
-                Text("나의 고민", color = MaterialTheme.colorScheme.primary)
+                Text("내가 털어놓은 얘기", color = MaterialTheme.colorScheme.primary)
                 Text(entry.worry, modifier = Modifier.padding(top = 6.dp))
                 Spacer(Modifier.height(18.dp))
-                Text("받은 답장", color = MaterialTheme.colorScheme.primary)
+                Text("별의 답장", color = MaterialTheme.colorScheme.primary)
                 Text(entry.response, modifier = Modifier.padding(top = 6.dp))
                 if (entry.riskLevel == WorryRiskLevel.CRISIS) {
                     Spacer(Modifier.height(18.dp))
