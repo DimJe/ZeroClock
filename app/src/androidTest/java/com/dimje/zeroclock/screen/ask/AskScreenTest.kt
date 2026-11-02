@@ -42,11 +42,11 @@ class AskScreenTest {
         }
 
         composeRule.onNodeWithText("따뜻한 테스트 답변").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("마음 내려놓기").assertDoesNotExist()
+        composeRule.onNodeWithContentDescription("답장 보내기").assertDoesNotExist()
     }
 
     @Test
-    fun 답변을_기다리는_동안_로딩_표시를_보여준다() {
+    fun 답변을_기다리는_동안_안내_말풍선을_보여준다() {
         composeRule.setContent {
             ZeroClockTheme {
                 AskScreen(
@@ -60,7 +60,59 @@ class AskScreenTest {
             }
         }
 
-        composeRule.onNode(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate)).assertIsDisplayed()
+        composeRule.onNodeWithText("답장을 적고 있어요…").assertIsDisplayed()
+        composeRule.onNode(hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate)).assertDoesNotExist()
+    }
+
+    @Test
+    fun 긴_고민을_보낸_뒤에도_로딩_말풍선이_보인다() {
+        composeRule.setContent {
+            ZeroClockTheme {
+                AskScreen(
+                    state = AskUiState(
+                        isLoading = false,
+                        worry = ("내일 해야 할 일이 많아서 걱정돼요. ".repeat(50)).take(1000),
+                        isSubmitting = true,
+                    ),
+                    onIntent = {},
+                )
+            }
+        }
+
+        composeRule.waitUntil(5_000) {
+            runCatching {
+                composeRule.onNodeWithText("답장을 적고 있어요…").assertIsDisplayed()
+            }.isSuccess
+        }
+    }
+
+    @Test
+    fun 긴_고민의_답장이_도착하면_답장이_보인다() {
+        val worry = ("내일 해야 할 일이 많아서 걱정돼요. ".repeat(50)).take(1000)
+        composeRule.setContent {
+            ZeroClockTheme {
+                AskScreen(
+                    state = AskUiState(
+                        isLoading = false,
+                        worry = worry,
+                        savedEntry = WorryEntry(
+                            id = 1,
+                            worry = worry,
+                            response = "오늘은 한 가지만 정해도 충분해요.",
+                            date = LocalDate.of(2026, 11, 2),
+                            createdAt = 0L,
+                        ),
+                    ),
+                    onIntent = {},
+                )
+            }
+        }
+
+        composeRule.waitUntil(5_000) {
+            runCatching {
+                composeRule.onNodeWithText("오늘은 한 가지만 정해도 충분해요.").assertIsDisplayed()
+            }.isSuccess
+        }
     }
 
     @Test
@@ -101,7 +153,7 @@ class AskScreenTest {
         }
 
         composeRule.onNodeWithText("오늘의 기록을 확인하지 못했어요.").assertIsDisplayed()
-        composeRule.onNodeWithContentDescription("마음 내려놓기").assertIsNotEnabled()
+        composeRule.onNodeWithContentDescription("답장 보내기").assertIsNotEnabled()
     }
 
     @Test
@@ -146,7 +198,7 @@ class AskScreenTest {
             }
         }
 
-        composeRule.onNodeWithContentDescription("마음 내려놓기").assertIsDisplayed().performClick()
+        composeRule.onNodeWithContentDescription("답장 보내기").assertIsDisplayed().performClick()
 
         assertEquals(listOf(AskUiIntent.Submit), intents)
     }

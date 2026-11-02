@@ -6,9 +6,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -23,10 +22,17 @@ fun AskConversation(
     onCall: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val scrollState = rememberScrollState()
+    LaunchedEffect(isSubmitting, savedEntry?.id, scrollState.maxValue) {
+        if (isSubmitting || savedEntry != null) {
+            scrollState.animateScrollTo(scrollState.maxValue)
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scrollState)
             .padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
@@ -36,10 +42,7 @@ fun AskConversation(
             ConversationMessage(worry, isMine = true)
         }
         if (isSubmitting) {
-            CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(start = 40.dp),
-            )
+            ConversationMessage("답장을 적고 있어요…", isMine = false)
         }
         savedEntry?.let { entry ->
             ComfortResponseContent(entry = entry, onCall = onCall)
