@@ -31,7 +31,10 @@ class ReminderNotifierTest {
                 }
                 posted.notification
             }
-            assertEquals("오늘의 마음을 내려놓을 시간", notification.extras.getString(Notification.EXTRA_TITLE))
+            assertEquals(R.drawable.ic_reminder_avatar, notification.icon)
+            assertNull(notification.extras.getString(Notification.EXTRA_TITLE))
+            assertEquals("오늘 어땠어? 잠들기 전에 잠깐 얘기할래?", notification.extras.getString(Notification.EXTRA_TEXT))
+            assertNull(notification.extras.getParcelableArray(Notification.EXTRA_MESSAGES))
             assertNotNull(notification.contentIntent)
             assertNull(manager.getNotificationChannel(ReminderNotifier.CHANNEL_ID).sound)
         } finally {

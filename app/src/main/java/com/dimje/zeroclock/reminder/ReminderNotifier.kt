@@ -40,10 +40,10 @@ class ReminderNotifier @Inject constructor(
         val openIntent = Intent(context, MainActivity::class.java)
             .setAction(ACTION_OPEN_REMINDER)
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        val message = "오늘 어땠어? 잠들기 전에 잠깐 얘기할래?"
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_reminder_star)
-            .setContentTitle("오늘의 마음을 내려놓을 시간")
-            .setContentText("잠들기 전, 마음에 남은 이야기를 들려주세요.")
+            .setSmallIcon(R.drawable.ic_reminder_avatar)
+            .setContentText(message)
             .setContentIntent(PendingIntent.getActivity(
                 context, 2300, openIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,

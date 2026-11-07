@@ -16,7 +16,7 @@ class ReminderNotificationTest {
     private val automation = InstrumentationRegistry.getInstrumentation().uiAutomation
 
     @Test
-    fun 알림을_누르면_오늘의_마음_화면을_열고_중복_화면을_쌓지_않는다() {
+    fun 알림을_누르면_털어놓기_화면을_열고_중복_화면을_쌓지_않는다() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val notifier = ReminderNotifier(context)
         assumeTrue("알림 권한이 허용된 테스트 기기에서 실행합니다", notifier.canNotify())
@@ -31,12 +31,12 @@ class ReminderNotificationTest {
                 shell("cmd statusbar expand-notifications")
                 await("알림창 전환") { rootPackage() == "com.android.systemui" }
                 await("실제 알림창 클릭") {
-                    find(automation.rootInActiveWindow, "오늘의 마음을 내려놓을 시간")?.let(::clickParent) == true
+                    find(automation.rootInActiveWindow, "오늘 어땠어? 잠들기 전에 잠깐 얘기할래?")?.let(::clickParent) == true
                 }
-                await("${index + 1}번째 클릭 후 작성 화면") { hasText("오늘의 마음") && rootPackage() == context.packageName }
+                await("${index + 1}번째 클릭 후 작성 화면") { hasText("오늘도 여기 있어요") && rootPackage() == context.packageName }
             }
             shell("input keyevent KEYCODE_BACK")
-            await("뒤로가기 한 번으로 홈 복귀") { !hasText("오늘의 마음") && rootPackage() == context.packageName }
+            await("뒤로가기 한 번으로 홈 복귀") { !hasText("오늘도 여기 있어요") && rootPackage() == context.packageName }
             shell("input keyevent KEYCODE_BACK")
             await("Activity 종료") { rootPackage() != context.packageName }
             notifier.show()
@@ -44,11 +44,11 @@ class ReminderNotificationTest {
             shell("cmd statusbar expand-notifications")
             await("새 진입용 알림창 전환") { rootPackage() == "com.android.systemui" }
             await("Activity 없는 상태의 알림 클릭") {
-                find(automation.rootInActiveWindow, "오늘의 마음을 내려놓을 시간")?.let(::clickParent) == true
+                find(automation.rootInActiveWindow, "오늘 어땠어? 잠들기 전에 잠깐 얘기할래?")?.let(::clickParent) == true
             }
-            await("새 Activity에서 작성 화면 진입") { hasText("오늘의 마음") && rootPackage() == context.packageName }
+            await("새 Activity에서 작성 화면 진입") { hasText("오늘도 여기 있어요") && rootPackage() == context.packageName }
             shell("input keyevent KEYCODE_BACK")
-            await("새 Activity에서 홈 복귀") { !hasText("오늘의 마음") && rootPackage() == context.packageName }
+            await("새 Activity에서 홈 복귀") { !hasText("오늘도 여기 있어요") && rootPackage() == context.packageName }
         } finally {
             manager.cancel(ReminderNotifier.NOTIFICATION_ID)
             shell("cmd statusbar collapse")
@@ -60,7 +60,7 @@ class ReminderNotificationTest {
 
     private fun find(node: AccessibilityNodeInfo?, text: String): AccessibilityNodeInfo? {
         node ?: return null
-        if (node.text?.toString() == text || node.contentDescription?.toString() == text) return node
+        if (node.text?.toString()?.contains(text) == true || node.contentDescription?.toString()?.contains(text) == true) return node
         for (index in 0 until node.childCount) find(node.getChild(index), text)?.let { return it }
         return null
     }
